@@ -1,0 +1,14 @@
+# Dependencies
+node_modules/
+
+# Build output (npm run build / npm run build:debug)
+dist/
+dist-debug/
+
+# Logs, local env files, OS and editor clutter
+*.log
+.env
+.env.*
+.DS_Store
+Thumbs.db
+.idea/

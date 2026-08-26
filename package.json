@@ -1,0 +1,21 @@
+{
+  "name": "pixel-penalties",
+  "version": "1.0.0",
+  "private": true,
+  "type": "module",
+  "description": "Pixel-art penalty shootouts for every European nation and competition. React 19 + React Compiler.",
+  "scripts": {
+    "build": "node build.mjs",
+    "dev": "node build.mjs --watch",
+    "test": "node --test \"tests/*.test.mjs\""
+  },
+  "dependencies": {
+    "react": "19.3.0",
+    "react-dom": "19.3.0"
+  },
+  "devDependencies": {
+    "@babel/core": "^7.28.0",
+    "babel-plugin-react-compiler": "1.0.0",
+    "esbuild": "0.28.2"
+  }
+}
