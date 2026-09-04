@@ -1,0 +1,808 @@
+import { toPaths } from './sprites.js';
+
+/**
+ * 27×18 pixel flags (3:2), painted with a tiny vocabulary of operations.
+ * Emblems are simplified to what reads at this size.
+ */
+
+export const FLAG_W = 27;
+export const FLAG_H = 18;
+const W = FLAG_W;
+const H = FLAG_H;
+
+const inside = (x, y) => x >= 0 && y >= 0 && x < W && y < H;
+
+// ─── Painter operations: each returns (px) => void ───────────────────────────
+
+const fill = (c) => (px) => px.fill(c);
+
+function edges(weights, total) {
+  const sum = weights.reduce((a, b) => a + b, 0);
+  let acc = 0;
+  return weights.map((w) => Math.round(((acc += w) / sum) * total));
+}
+
+const hs = (colors, weights = colors.map(() => 1)) => (px) => {
+  const e = edges(weights, H);
+  for (let y = 0; y < H; y++) {
+    const i = e.findIndex((edge) => y < edge);
+    for (let x = 0; x < W; x++) px[y * W + x] = colors[i];
+  }
+};
+
+const vs = (colors, weights = colors.map(() => 1)) => (px) => {
+  const e = edges(weights, W);
+  for (let x = 0; x < W; x++) {
+    const i = e.findIndex((edge) => x < edge);
+    for (let y = 0; y < H; y++) px[y * W + x] = colors[i];
+  }
+};
+
+const rect = (c, x, y, w, h) => (px) => {
+  for (let j = y; j < y + h; j++) for (let i = x; i < x + w; i++) if (inside(i, j)) px[j * W + i] = c;
+};
+
+/** Upright cross; x0 = left edge of the vertical bar (Nordic crosses sit towards the hoist). */
+const cross = (c, t = 4, x0 = Math.round(W / 2 - t / 2)) => (px) => {
+  const y0 = Math.round(H / 2 - t / 2);
+  rect(c, x0, 0, t, H)(px);
+  rect(c, 0, y0, W, t)(px);
+};
+
+const nordic = (c, t = 4, x0 = 8) => cross(c, t, x0);
+
+const each = (test) => (c) => (px) => {
+  for (let y = 0; y < H; y++) for (let x = 0; x < W; x++) if (test(x + 0.5, y + 0.5)) px[y * W + x] = c;
+};
+
+const saltire = (c, t) =>
+  each((x, y) => {
+    const n = Math.hypot(W, H);
+    return Math.abs(H * x - W * y) / n < t / 2 || Math.abs(H * x - W * (H - y)) / n < t / 2;
+  })(c);
+
+const disc = (c, cx, cy, r) => each((x, y) => (x - cx) ** 2 + (y - cy) ** 2 <= r * r)(c);
+
+const ring = (c, cx, cy, r1, r2) =>
+  each((x, y) => {
+    const d = (x - cx) ** 2 + (y - cy) ** 2;
+    return d <= r1 * r1 && d > r2 * r2;
+  })(c);
+
+const crescent = (c, cx, cy, r, dx, r2) =>
+  each((x, y) => (x - cx) ** 2 + (y - cy) ** 2 <= r * r && (x - cx - dx) ** 2 + (y - cy) ** 2 > r2 * r2)(c);
+
+const hoistTriangle = (c, depth) => each((x, y) => x < depth * (1 - Math.abs(y - H / 2) / (H / 2)))(c);
+
+/** Paint a string mask. `map` gives colours per character; '#' uses `c`. `outline` rings it. */
+const mask = (rows, c, x0, y0, { map = {}, outline } = {}) => (px) => {
+  const colorOf = (ch, i, j) => (ch === '#' ? (typeof c === 'function' ? c(i, j) : c) : map[ch]);
+  if (outline) {
+    rows.forEach((row, j) =>
+      [...row].forEach((ch, i) => {
+        if (ch === '.') return;
+        for (let dy = -1; dy <= 1; dy++)
+          for (let dx = -1; dx <= 1; dx++) if (inside(x0 + i + dx, y0 + j + dy)) px[(y0 + j + dy) * W + x0 + i + dx] = outline;
+      }),
+    );
+  }
+  rows.forEach((row, j) =>
+    [...row].forEach((ch, i) => {
+      const col = ch === '.' ? null : colorOf(ch, i, j);
+      if (col && inside(x0 + i, y0 + j)) px[(y0 + j) * W + x0 + i] = col;
+    }),
+  );
+};
+
+const dots = (c, points) => (px) => points.forEach(([x, y]) => inside(x, y) && (px[y * W + x] = c));
+
+/** Scalable five-pointed star: point-in-polygon on its ten vertices. */
+function inStar(x, y, cx, cy, r) {
+  const pts = [];
+  for (let i = 0; i < 10; i++) {
+    const a = -Math.PI / 2 + (i * Math.PI) / 5;
+    const rr = i % 2 ? r * 0.5 : r;
+    pts.push([cx + rr * Math.cos(a), cy + rr * Math.sin(a)]);
+  }
+  let hit = false;
+  for (let i = 0, j = 9; i < 10; j = i++) {
+    const [xi, yi] = pts[i];
+    const [xj, yj] = pts[j];
+    if (yi > y !== yj > y && x < ((xj - xi) * (y - yi)) / (yj - yi) + xi) hit = !hit;
+  }
+  return hit;
+}
+
+/** Stars: hand-drawn sprites while small (polygons alias into stick figures), true geometry when large. */
+const star = (c, cx, cy, r) =>
+  r < 1.6
+    ? mask(PLUS, c, Math.round(cx - 1.5), Math.round(cy - 1.5))
+    : r < 2.8
+      ? mask(STAR5, c, Math.round(cx - 2.5), Math.round(cy - 2.5))
+      : r < 4
+        ? mask(STAR7, c, Math.round(cx - 3.5), Math.round(cy - 3.5))
+        : each((x, y) => inStar(x, y, cx, cy, r))(c);
+
+/** Diagonal band of full width t: dir 1 runs bottom-left → top-right, dir -1 top-left → bottom-right. */
+const band = (c, t, dir = 1, offset = 0) => {
+  const n = Math.hypot(W, H);
+  return each((x, y) => Math.abs((dir === 1 ? H * x + W * y - W * H : H * x - W * y) / n - offset) < t / 2)(c);
+};
+
+/** Area above the bottom-left → top-right diagonal (k moves the split towards the corners). */
+const upperLeft = (c, k = 1) => each((x, y) => H * x + W * y < W * H * k)(c);
+const lowerRight = (c, k = 1) => each((x, y) => H * x + W * y > W * H * k)(c);
+/** Area below the top-left → bottom-right diagonal. */
+const lowerLeft = (c) => each((x, y) => H * x < W * y)(c);
+
+/** Serrated hoist (Bahrain, Qatar). */
+const serrated = (c, base, amp, teeth) =>
+  each((x, y) => {
+    const f = ((y / H) * teeth) % 1;
+    return x < base + amp * (1 - Math.abs(f - 0.5) * 2);
+  })(c);
+
+/** A miniature Union Jack in the canton of the British ensigns. */
+const unionCanton = (cw = 13, ch = 9) => (px) => {
+  const n = Math.hypot(cw, ch);
+  for (let y = 0; y < ch; y++)
+    for (let x = 0; x < cw; x++) {
+      const fx = x + 0.5;
+      const fy = y + 0.5;
+      const d1 = Math.abs(ch * fx - cw * fy) / n;
+      const d2 = Math.abs(ch * fx - cw * (ch - fy)) / n;
+      let col = '#012169';
+      if (d1 < 1.2 || d2 < 1.2) col = '#ffffff';
+      if (d1 < 0.45 || d2 < 0.45) col = '#c8102e';
+      if (Math.abs(fx - cw / 2) < 1.7 || Math.abs(fy - ch / 2) < 1.7) col = '#ffffff';
+      if (Math.abs(fx - cw / 2) < 0.9 || Math.abs(fy - ch / 2) < 0.9) col = '#c8102e';
+      px[y * W + x] = col;
+    }
+};
+
+/** Nepal's double pennant (pad grows it for the blue border). */
+const nepal = (pad) => (x, y) =>
+  (y < 9.5 + pad && x < 1.5 + pad + 13.5 * (1 - y / 9.5)) || (y > 7.5 - pad && x < 1.5 + pad + 12.5 * ((y - 7.5) / 10.5));
+
+// ─── Emblem masks ───────────────────────────────────────────────────────────
+
+const EAGLE = [
+  '...#...#...',
+  '..##...##..',
+  '#.###.###.#',
+  '##.#####.##',
+  '.#########.',
+  '..#######..',
+  '....###....',
+  '...#####...',
+  '..##.#.##..',
+];
+
+const DRAGON = [
+  '.##..........#.',
+  '####........##.',
+  '.###.......#.#.',
+  '..#########.#..',
+  '..###########..',
+  '.############..',
+  '#.#..######.#..',
+  '...##....###...',
+  '..#.......#.#..',
+  '.##......##....',
+];
+
+const HARP = ['##.....', '#.##...', '#.#.##.', '#.#.#.#', '#.#.#.#', '#.#.#.#', '#.#.#.#', '#######', '#......'];
+
+const HAMMER_SICKLE = ['...##.', '#...##', '#..#.#', '#.#..#', '.##.#.', '#..#..'];
+
+const STAR5 = ['..#..', '.###.', '#####', '.###.', '.#.#.'];
+
+const STAR7 = ['...#...', '..###..', '#######', '.#####.', '..###..', '.##.##.', '##...##'];
+
+const HEXAGRAM = [
+  '....#....',
+  '...#.#...',
+  '#########',
+  '.#.....#.',
+  '..#...#..',
+  '.#.....#.',
+  '#########',
+  '...#.#...',
+  '....#....',
+];
+
+const PLUS = ['.#.', '###', '.#.'];
+
+const CROWN = ['#.#.#', '#####', '#####'];
+
+const KEYS = ['g.....w', '.g...w.', '..g.w..', '...g...', '..w.g..', '.w...g.', 'w.....g'];
+
+const CASTLE = ['#.#...#.#', '###...###', '###.#.###', '#########', '#########', '###...###', '###...###'];
+
+const KOSOVO_MAP = ['..##.....', '.######..', '#########', '#########', '.########', '..######.', '....###..'];
+
+const CYPRUS_MAP = ['...........##', '......######.', '..#########..', '##########...', '.#####.......'];
+
+const SHIELD = ['#######', '#######', '#######', '#######', '#######', '.#####.', '..###..', '...#...'];
+
+const SMALL_SHIELD = ['#####', '#####', '#####', '#####', '.###.', '..#..'];
+
+const DOUBLE_CROSS = ['..#..', '.###.', '..#..', '#####', '..#..'];
+
+const GEORGE = ['.###.', '##.##', '#...#', '##.##', '.###.'];
+
+const RINGS = ['###.###.###', '#.#.#.#.#.#', '###.###.###'];
+
+const MKD_RAYS = (c) =>
+  each((x, y) => {
+    const cx = W / 2;
+    const cy = H / 2;
+    const a = Math.atan2(y - cy, x - cx);
+    const targets = [0, Math.PI, Math.PI / 2, -Math.PI / 2, Math.atan2(cy, cx), Math.atan2(cy, -cx), Math.atan2(-cy, cx), Math.atan2(-cy, -cx)];
+    return targets.some((t) => {
+      let d = Math.abs(a - t);
+      if (d > Math.PI) d = 2 * Math.PI - d;
+      return d < 0.17;
+    });
+  })(c);
+
+// ─── Colours ────────────────────────────────────────────────────────────────
+
+const MAPLE = ['....#....', '...###...', '.#.###.#.', '#########', '.#######.', '..#####..', '.#######.', '....#....', '....#....'];
+
+const TEMPLE = ['..#..#..#..', '..#.###.#..', '.###.#.###.', '.#########.', '###########', '#.#.#.#.#.#'];
+
+const BAUHINIA = ['..#.#..', '.##.##.', '###.###', '.#####.', '###.###', '.##.##.', '..#.#..'];
+
+const CEDAR = ['...#...', '..###..', '.#####.', '..###..', '.#####.', '#######', '...#...', '...#...'];
+
+const SOYOMBO = ['.#.', '###', '.#.', '###', '#.#', '###', '#.#', '###'];
+
+const LION = ['#..##.', '#.####', '######', '.####.', '.#..#.', '##.##.'];
+
+const BIRD = ['##...#', '.#####', '..###.', '.#.#..'];
+
+const TRIDENT = ['#.#.#', '#.#.#', '#####', '..#..', '..#..'];
+
+const RED = '#d52b1e';
+const WHITE = '#ffffff';
+const BLUE = '#0b3d91';
+const GOLD = '#f5c400';
+const GREEN = '#009246';
+const BLACK = '#161616';
+
+// ─── Flags ──────────────────────────────────────────────────────────────────
+
+export const FLAG_SPECS = {
+  ALB: [fill('#e41e20'), mask(EAGLE, BLACK, 8, 4)],
+  AND: [
+    vs(['#10069f', '#fedd00', '#d50032']),
+    mask(SMALL_SHIELD, (i, j) => (j < 2 ? '#d50032' : i < 2 ? '#fedd00' : '#d50032'), 11, 6, { outline: '#c8a000' }),
+  ],
+  ARM: [hs(['#d90012', '#0033a0', '#f2a800'])],
+  AUT: [hs(['#ed2939', WHITE, '#ed2939'])],
+  AZE: [
+    hs(['#00b5e2', '#ef3340', '#509e2f']),
+    crescent(WHITE, 12.6, 9, 3.6, 0.9, 2.9),
+    mask(PLUS, WHITE, 15, 8),
+  ],
+  BLR: [
+    hs(['#c8313e', '#4aa657'], [2, 1]),
+    rect(WHITE, 0, 0, 4, H),
+    each((x, y) => x < 4 && (Math.floor(x) + Math.floor(y)) % 3 === 0)('#c8313e'),
+  ],
+  BEL: [vs([BLACK, '#fdda24', '#ef3340'])],
+  BIH: [
+    fill('#002395'),
+    each((x, y) => x > 8 + (y / H) * 12 && x < 20)('#fecb00'),
+    dots(WHITE, [[6, 1], [7, 4], [9, 7], [11, 10], [13, 13], [15, 16]]),
+  ],
+  BUL: [hs([WHITE, '#00966e', '#d62612'])],
+  CRO: [
+    hs(['#ff0000', WHITE, '#171796']),
+    mask(SHIELD, (i, j) => ((i + j) % 2 === 0 ? '#ff0000' : WHITE), 10, 5, { outline: '#171796' }),
+  ],
+  CYP: [
+    fill(WHITE),
+    mask(CYPRUS_MAP, '#d57800', 7, 5),
+    dots('#4e5b31', [[9, 12], [10, 13], [11, 13], [12, 12], [15, 12], [16, 13], [17, 13], [18, 12]]),
+  ],
+  CZE: [hs([WHITE, '#d7141a']), hoistTriangle('#11457e', 13.5)],
+  DEN: [fill('#c8102e'), nordic(WHITE, 3, 8)],
+  ENG: [fill(WHITE), cross('#cf142b', 4)],
+  EST: [hs(['#0072ce', BLACK, WHITE])],
+  FRO: [fill(WHITE), nordic('#005eb8', 4, 7), nordic('#ef3340', 2, 8)],
+  FIN: [fill(WHITE), nordic('#002f6c', 4, 7)],
+  FRA: [vs(['#002395', WHITE, '#ed2939'])],
+  GEO: [
+    fill(WHITE),
+    cross('#ff0000', 4),
+    mask(PLUS, '#ff0000', 4, 2),
+    mask(PLUS, '#ff0000', 20, 2),
+    mask(PLUS, '#ff0000', 4, 13),
+    mask(PLUS, '#ff0000', 20, 13),
+  ],
+  GER: [hs([BLACK, '#dd0000', '#ffce00'])],
+  GIB: [hs([WHITE, '#da000c'], [2, 1]), mask(CASTLE, '#da000c', 9, 3), rect(GOLD, 13, 13, 1, 4)],
+  GRE: [
+    hs(Array.from({ length: 9 }, (_, i) => (i % 2 ? WHITE : '#0d5eaf'))),
+    rect('#0d5eaf', 0, 0, 10, 10),
+    rect(WHITE, 4, 0, 2, 10),
+    rect(WHITE, 0, 4, 10, 2),
+  ],
+  HUN: [hs(['#cd2a3e', WHITE, '#436f4d'])],
+  ISL: [fill('#02529c'), nordic(WHITE, 4, 7), nordic('#dc1e35', 2, 8)],
+  ISR: [fill(WHITE), rect('#0038b8', 0, 2, W, 2), rect('#0038b8', 0, 14, W, 2), mask(HEXAGRAM, '#0038b8', 9, 4)],
+  ITA: [vs(['#009246', WHITE, '#ce2b37'])],
+  KAZ: [
+    fill('#00afca'),
+    disc('#fec50c', 15, 7, 3),
+    dots('#fec50c', [[15, 2], [20, 7], [10, 7], [19, 3], [11, 3], [19, 11], [11, 11]]),
+    rect('#fec50c', 11, 12, 9, 1),
+    rect('#fec50c', 13, 13, 5, 1),
+    each((x, y) => x > 1 && x < 3 && Math.floor(y) % 2 === 0)('#fec50c'),
+  ],
+  KOS: [
+    fill('#244aa5'),
+    mask(KOSOVO_MAP, '#d0a650', 9, 7),
+    dots(WHITE, [[6, 5], [9, 3], [12, 2], [14, 2], [17, 3], [20, 5]]),
+  ],
+  LVA: [hs(['#9e3039', WHITE, '#9e3039'], [2, 1, 2])],
+  LIE: [hs(['#002b7f', '#ce1126']), mask(CROWN, '#ffd83d', 3, 2)],
+  LTU: [hs(['#fdb913', '#006a44', '#c1272d'])],
+  LUX: [hs(['#ef3340', WHITE, '#00a3e0'])],
+  MLT: [vs([WHITE, '#cf142b']), mask(GEORGE, '#9ea4ab', 2, 2, { map: {} })],
+  MDA: [
+    vs(['#0046ae', '#ffd200', '#cc092f']),
+    mask(SMALL_SHIELD, (i, j) => (j < 2 ? '#cc092f' : '#0046ae'), 11, 6, { outline: '#8c5a2b' }),
+  ],
+  MNE: [fill('#c40308'), rect('#d4af37', 0, 0, W, 1), rect('#d4af37', 0, H - 1, W, 1), rect('#d4af37', 0, 0, 1, H), rect('#d4af37', W - 1, 0, 1, H), mask(EAGLE, '#d4af37', 8, 4)],
+  NED: [hs(['#ae1c28', WHITE, '#21468b'])],
+  MKD: [fill('#d20000'), MKD_RAYS('#ffe600'), disc('#d20000', 13.5, 9, 4.2), disc('#ffe600', 13.5, 9, 3.2)],
+  NIR: [
+    fill(WHITE),
+    cross('#cf142b', 4),
+    mask(['..#..', '#####', '.###.', '#####', '..#..'], WHITE, 11, 6),
+    dots('#cf142b', [[13, 8]]),
+    mask(['#.#', '###'], GOLD, 12, 3),
+  ],
+  NOR: [fill('#ba0c2f'), nordic(WHITE, 4, 7), nordic('#00205b', 2, 8)],
+  POL: [hs([WHITE, '#dc143c'])],
+  POR: [
+    vs(['#006600', '#ff0000'], [2, 3]),
+    ring('#ffe000', 10.8, 9, 4.6, 3.1),
+    mask(['###', '#.#', '###', '.#.'], (i, j) => (i === 1 && j < 3 ? WHITE : '#ff0000'), 9, 7, { map: { '.': null } }),
+    dots(WHITE, [[10, 8]]),
+  ],
+  IRL: [vs(['#169b62', WHITE, '#ff883e'])],
+  ROU: [vs(['#002b7f', '#fcd116', '#ce1126'])],
+  RUS: [hs([WHITE, '#0039a6', '#d52b1e'])],
+  SMR: [
+    hs([WHITE, '#5eb6e4']),
+    mask(SMALL_SHIELD, (i, j) => (j < 2 ? '#5eb6e4' : WHITE), 11, 6, { outline: '#8f8f8f' }),
+    mask(['#.#.#', '#####'], GOLD, 11, 3),
+  ],
+  SCO: [fill('#005eb8'), saltire(WHITE, 3.4)],
+  SRB: [
+    hs(['#c6363c', '#0c4076', WHITE]),
+    mask(SHIELD, (i, j) => (i === 3 || j === 3 ? WHITE : '#c6363c'), 5, 5, { outline: WHITE }),
+    mask(['#.#.#', '#####'], GOLD, 6, 2),
+  ],
+  SVK: [
+    hs([WHITE, '#0b4ea2', '#ee1c25']),
+    mask(SHIELD, (i, j) => (j >= 6 ? '#0b4ea2' : '#ee1c25'), 5, 4, { outline: WHITE }),
+    mask(DOUBLE_CROSS, WHITE, 6, 5),
+  ],
+  SVN: [
+    hs([WHITE, '#005da4', '#ed1c24']),
+    mask(SMALL_SHIELD, (i, j) => (j >= 3 && Math.abs(i - 2) <= j - 3 ? WHITE : '#005da4'), 5, 3, { outline: '#ed1c24' }),
+    dots(GOLD, [[6, 3], [8, 3]]),
+  ],
+  ESP: [
+    hs(['#c60b1e', '#ffc400', '#c60b1e'], [2, 5, 2]),
+    mask(SMALL_SHIELD, (i, j) => ((i < 2) !== (j < 2) ? '#ffc400' : '#c60b1e'), 5, 7, { outline: '#8c6a00' }),
+    mask(['#.#.#', '#####'], '#c8a000', 5, 4),
+  ],
+  SWE: [fill('#006aa7'), nordic('#fecc00', 3, 8)],
+  SUI: [fill('#d52b1e'), rect(WHITE, 12, 3, 3, 12), rect(WHITE, 8, 7, 11, 4)],
+  TUR: [fill('#e30a17'), crescent(WHITE, 10, 9, 5, 1.4, 4), mask(STAR5, WHITE, 14, 7)],
+  UKR: [hs(['#0057b7', '#ffd700'])],
+  WAL: [hs([WHITE, '#00b140']), mask(DRAGON, '#d30731', 6, 4)],
+
+  URS: [fill('#cc0000'), mask(HAMMER_SICKLE, '#ffd700', 3, 5), mask(['.#.', '#.#', '.#.'], '#ffd700', 4, 1)],
+  CIS: [fill('#1c3f94'), ring(WHITE, 13.5, 9, 5, 3.4), disc('#f5c400', 13.5, 9, 1.6)],
+  YUG: [hs(['#0c4077', WHITE, '#de0000']), mask(STAR7, '#de0000', 10, 5, { outline: '#f5c400' })],
+  SCG: [hs(['#0c4077', WHITE, '#de0000'])],
+  TCH: [hs([WHITE, '#d7141a']), hoistTriangle('#11457e', 13.5)],
+  GDR: [
+    hs([BLACK, '#dd0000', '#ffce00']),
+    ring('#ffce00', 13.5, 9, 4.2, 2.9),
+    rect(BLACK, 13, 7, 1, 5),
+    rect(BLACK, 12, 7, 3, 1),
+  ],
+  FRG: [hs([BLACK, '#dd0000', '#ffce00'])],
+  SAA: [fill('#ed1c24'), rect('#0b4ea2', 0, 0, 8, 8), nordic(WHITE, 3, 8)],
+  IRE: [fill('#1d7b3a'), mask(HARP, '#f5c400', 10, 4)],
+  BOH: [hs([WHITE, '#e3000f'])],
+  RUE: [hs([WHITE, '#0039a6', '#d52b1e']), rect('#f5c400', 0, 0, 9, 6), mask(['#.#', '###', '.#.'], BLACK, 3, 1)],
+
+  GBR: [
+    fill('#012169'),
+    saltire(WHITE, 4.2),
+    saltire('#c8102e', 1.4),
+    cross(WHITE, 6),
+    cross('#c8102e', 4),
+  ],
+  EUA: [hs([BLACK, '#dd0000', '#ffce00']), mask(RINGS, WHITE, 8, 7)],
+  MON: [hs(['#ce1126', WHITE])],
+  VAT: [vs(['#ffe000', WHITE]), mask(KEYS, GOLD, 16, 5, { map: { g: GOLD, w: '#b9b9b9' } })],
+  // ─── South America ─────────────────────────────────────────────────────────
+  ARG: [hs(['#74acdf', WHITE, '#74acdf']), disc('#f6b40e', 13.5, 9, 2.2)],
+  BOL: [hs(['#d52b1e', '#f9e300', '#007934'])],
+  BRA: [
+    fill('#009c3b'),
+    each((x, y) => Math.abs(x - 13.5) / 11.5 + Math.abs(y - 9) / 7.2 <= 1)('#ffdf00'),
+    disc('#002776', 13.5, 9, 3.9),
+    each((x, y) => (x - 13.5) ** 2 + (y - 9) ** 2 <= 3.9 ** 2 && Math.abs(y - 9 + (x - 13.5) * 0.25 + 0.2) < 0.55)(WHITE),
+  ],
+  CHI: [hs([WHITE, '#d52b1e']), rect('#0039a6', 0, 0, 9, 9), star(WHITE, 4.5, 4.7, 3.1)],
+  COL: [hs(['#fcd116', '#003893', '#ce1126'], [2, 1, 1])],
+  ECU: [hs(['#ffd100', '#034ea2', '#ed1c24'], [2, 1, 1]), disc('#1c6fbf', 13.5, 8.5, 2.4), disc('#8a5a2b', 13.5, 7.6, 1.1)],
+  PAR: [hs(['#d52b1e', WHITE, '#0038a8']), ring('#2d8f3c', 13.5, 9, 2.5, 1.7), disc('#fcd116', 13.5, 9, 0.9)],
+  PER: [vs(['#d91023', WHITE, '#d91023'])],
+  URU: [hs(Array.from({ length: 9 }, (_, i) => (i % 2 ? '#0038a8' : WHITE))), rect(WHITE, 0, 0, 10, 10), disc('#fcd116', 5, 5, 2.8)],
+  VEN: [hs(['#ffcc00', '#00247d', '#cf142b']), dots(WHITE, [[9, 10], [10, 8], [11, 7], [13, 7], [14, 7], [16, 7], [17, 8], [18, 10]])],
+
+  // ─── North, Central America & Caribbean ────────────────────────────────────
+  AIA: [fill('#012169'), unionCanton(), disc(WHITE, 20, 9, 3.6), disc('#f68b1f', 20, 10, 1.6)],
+  ATG: [
+    fill('#ce1126'),
+    each((x, y) => y < H * (1 - Math.abs(x - 13.5) / 13.5))(BLACK),
+    each((x, y) => y < H * (1 - Math.abs(x - 13.5) / 13.5) && y >= 7 && y < 11)('#0072c6'),
+    each((x, y) => y < H * (1 - Math.abs(x - 13.5) / 13.5) && y >= 11)(WHITE),
+    each((x, y) => (x - 13.5) ** 2 + (y - 7) ** 2 < 9 && y < 7)('#fcd116'),
+  ],
+  ARU: [fill('#418fde'), rect('#f9d616', 0, 12, W, 1), rect('#f9d616', 0, 14, W, 1), star('#ef3340', 5, 5, 3.2)],
+  BAH: [hs(['#00abc9', '#fae042', '#00abc9']), hoistTriangle(BLACK, 11)],
+  BRB: [vs(['#00267f', '#ffc726', '#00267f']), mask(TRIDENT, BLACK, 11, 6)],
+  BLZ: [fill('#003f87'), rect('#ce1126', 0, 0, W, 2), rect('#ce1126', 0, 16, W, 2), disc(WHITE, 13.5, 9, 4.5), disc('#2e7d32', 13.5, 9, 2)],
+  BER: [fill('#c8102e'), unionCanton(), mask(SMALL_SHIELD, WHITE, 18, 6, { outline: '#1f4aa8' })],
+  VGB: [fill('#012169'), unionCanton(), mask(SMALL_SHIELD, '#007a3d', 18, 6, { outline: WHITE })],
+  CAN: [vs(['#d80621', WHITE, '#d80621'], [1, 2, 1]), mask(MAPLE, '#d80621', 9, 4)],
+  CAY: [fill('#012169'), unionCanton(), mask(SMALL_SHIELD, WHITE, 18, 6, { outline: '#c8102e' })],
+  CRC: [hs(['#002b7f', WHITE, '#ce1126', WHITE, '#002b7f'], [1, 1, 2, 1, 1])],
+  CUB: [hs(['#002a8f', WHITE, '#002a8f', WHITE, '#002a8f']), hoistTriangle('#cf142b', 13), star(WHITE, 4.6, 9, 2.4)],
+  CUW: [fill('#002b7f'), rect('#f9e814', 0, 11, W, 2), star(WHITE, 3.6, 3.8, 2.1), star(WHITE, 7.4, 7, 2.7)],
+  DMA: [fill('#006b3f'), cross('#fcd116', 3), cross(BLACK, 1), disc('#d41c30', 13.5, 9, 4), disc('#9461c9', 13.5, 9, 1.6)],
+  DOM: [
+    fill(WHITE),
+    rect('#002d62', 0, 0, 11, 7),
+    rect('#ce1126', 16, 0, 11, 7),
+    rect('#ce1126', 0, 11, 11, 7),
+    rect('#002d62', 16, 11, 11, 7),
+    disc('#1a7a3a', 13.5, 9, 1),
+  ],
+  SLV: [hs(['#0f47af', WHITE, '#0f47af']), ring('#2e7d32', 13.5, 9, 2.5, 1.7), disc('#fcd116', 13.5, 9, 1)],
+  GRN: [
+    fill('#ce1126'),
+    each((x, y) => x >= 2 && x < 25 && y >= 2 && y < 16 && Math.abs((y - 9) / 7) > Math.abs((x - 13.5) / 11.5))('#fcd116'),
+    each((x, y) => x >= 2 && x < 25 && y >= 2 && y < 16 && Math.abs((y - 9) / 7) <= Math.abs((x - 13.5) / 11.5))('#007a5e'),
+    disc('#ce1126', 13.5, 9, 2.4),
+    star('#fcd116', 13.5, 9.2, 1.6),
+  ],
+  GUA: [vs(['#4997d0', WHITE, '#4997d0']), ring('#6ab04c', 13.5, 9, 2.6, 1.8), disc('#2e7d32', 13.5, 9, 0.9)],
+  GUY: [fill('#009e49'), hoistTriangle(WHITE, 27), hoistTriangle('#fcd116', 25.5), hoistTriangle(BLACK, 14), hoistTriangle('#ce1126', 12.5)],
+  HAI: [hs(['#00209f', '#d21034']), rect(WHITE, 9, 6, 9, 6), disc('#2e7d32', 13.5, 9, 1.6)],
+  HON: [hs(['#00bce4', WHITE, '#00bce4']), dots('#00bce4', [[10, 7], [16, 7], [13, 9], [10, 10], [16, 10]])],
+  JAM: [
+    fill('#009b3a'),
+    each((x, y) => x < 13.5 * (1 - Math.abs(y - 9) / 9))(BLACK),
+    each((x, y) => W - x < 13.5 * (1 - Math.abs(y - 9) / 9))(BLACK),
+    saltire('#fed100', 3),
+  ],
+  MEX: [vs(['#006847', WHITE, '#ce1126']), disc('#8c6d2c', 13.5, 8.5, 2.2), rect('#2e7d32', 12, 11, 3, 1)],
+  MSR: [fill('#012169'), unionCanton(), mask(SMALL_SHIELD, '#00a3dd', 18, 6, { outline: WHITE })],
+  NCA: [hs(['#0067c6', WHITE, '#0067c6']), mask(['..#..', '.###.', '#####'], '#3fa34d', 11, 7)],
+  PAN: [fill(WHITE), rect('#d21034', 13, 0, 14, 9), rect('#005293', 0, 9, 14, 9), star('#005293', 6.5, 4.6, 2.5), star('#d21034', 20.5, 13.6, 2.5)],
+  PUR: [hs(['#ed0a3f', WHITE, '#ed0a3f', WHITE, '#ed0a3f']), hoistTriangle('#0050f0', 13), star(WHITE, 4.5, 9, 2.3)],
+  SKN: [
+    fill('#009e49'),
+    lowerRight('#ce1126'),
+    band('#fcd116', 6.4),
+    band(BLACK, 4.4),
+    star(WHITE, 9.5, 11.6, 1.5),
+    star(WHITE, 17.5, 6.4, 1.5),
+  ],
+  LCA: [
+    fill('#66ccff'),
+    each((x, y) => y >= 2 && y < 15 && Math.abs(x - 13.5) <= ((y - 2) * 5.5) / 13)(WHITE),
+    each((x, y) => y >= 3.5 && y < 15 && Math.abs(x - 13.5) <= ((y - 3.5) * 4.5) / 11.5)(BLACK),
+    each((x, y) => y >= 9 && y < 15 && Math.abs(x - 13.5) <= ((y - 9) * 4.5) / 6)('#fcd116'),
+  ],
+  VIN: [
+    vs(['#0072c6', '#fcd116', '#009e60'], [1, 2, 1]),
+    mask(['.#.....#.', '###...###', '.#..#..#.', '...###...', '....#....'], '#009e60', 9, 6),
+  ],
+  SUR: [hs(['#377e3f', WHITE, '#b40a2d', WHITE, '#377e3f'], [2, 1, 4, 1, 2]), star('#ecc81d', 13.5, 9.2, 2.8)],
+  TRI: [fill('#da1a35'), band(WHITE, 6.2, -1), band(BLACK, 4.4, -1)],
+  TCA: [fill('#012169'), unionCanton(), mask(SMALL_SHIELD, '#fcd116', 18, 6, { outline: WHITE })],
+  USA: [
+    hs(Array.from({ length: 13 }, (_, i) => (i % 2 ? WHITE : '#b22234'))),
+    rect('#3c3b6e', 0, 0, 11, 10),
+    dots(WHITE, [[1, 1], [3, 1], [5, 1], [7, 1], [9, 1], [2, 3], [4, 3], [6, 3], [8, 3], [1, 5], [3, 5], [5, 5], [7, 5], [9, 5], [2, 7], [4, 7], [6, 7], [8, 7]]),
+  ],
+  VIR: [fill(WHITE), mask(EAGLE, '#f4c430', 8, 4), rect('#162e70', 12, 7, 3, 1), rect('#d0021b', 12, 8, 3, 2)],
+  BOE: [fill(WHITE), upperLeft('#fcd116', 0.5), lowerRight('#012a87', 1.2), ring(BLACK, 11, 10, 3.2, 2.4), star('#dc171d', 11, 10, 1.7)],
+  GUF: [fill('#009a3d'), upperLeft('#fcd116'), star('#e3000f', 13.5, 9.2, 3.2)],
+  GLP: [fill('#d21034'), disc('#fcd116', 13.5, 8, 3.2), rect('#2e8b57', 0, 13, W, 5)],
+  MTQ: [hs(['#00a651', BLACK]), hoistTriangle('#e4181c', 13)],
+  SMN: [fill('#6ab3e3'), disc('#fcd116', 13.5, 8, 3), rect(WHITE, 0, 13, W, 5)],
+  SXM: [hs(['#ed2939', '#002d8f']), hoistTriangle(WHITE, 12), disc('#f4c430', 4.5, 9, 1.8)],
+
+  // ─── Asia ─────────────────────────────────────────────────────────────────
+  AFG: [vs([BLACK, '#d32011', '#007a36']), disc(WHITE, 13.5, 9, 2.6), disc('#d32011', 13.5, 9, 1.4)],
+  AUS: [
+    fill('#012169'),
+    unionCanton(),
+    star(WHITE, 6.5, 13.6, 2.6),
+    star(WHITE, 20.5, 14.5, 1.6),
+    star(WHITE, 20.5, 3.5, 1.5),
+    star(WHITE, 17.5, 8, 1.4),
+    star(WHITE, 23.5, 7, 1.5),
+    dots(WHITE, [[21, 10]]),
+  ],
+  BHR: [fill('#ce1126'), serrated(WHITE, 6, 3, 5)],
+  BAN: [fill('#006a4e'), disc('#f42a41', 12, 9, 5)],
+  BHU: [fill('#ff4e12'), upperLeft('#ffd520'), mask(DRAGON, WHITE, 6, 4)],
+  BRU: [fill('#f7e017'), band(WHITE, 3.2, -1, 1.6), band(BLACK, 3.2, -1, -1.6), disc('#cf1126', 13.5, 9, 3.2), rect('#cf1126', 12, 4, 3, 2)],
+  CAM: [hs(['#032ea1', '#e00025', '#032ea1'], [1, 2, 1]), mask(TEMPLE, WHITE, 8, 6)],
+  CHN: [fill('#ee1c25'), star('#ffff00', 5, 5, 3.4), dots('#ffff00', [[10, 2], [12, 4], [12, 7], [10, 9]])],
+  TPE: [fill('#fe0000'), rect('#000095', 0, 0, 13, 9), disc(WHITE, 6.5, 4.5, 2.9), disc('#000095', 6.5, 4.5, 1.9), disc(WHITE, 6.5, 4.5, 1.3)],
+  GUM: [
+    fill('#c62139'),
+    rect('#00297b', 1, 1, 25, 16),
+    each((x, y) => ((x - 13.5) / 3.6) ** 2 + ((y - 9) / 5.6) ** 2 <= 1)('#c62139'),
+    each((x, y) => ((x - 13.5) / 2.8) ** 2 + ((y - 9) / 4.8) ** 2 <= 1)('#6cc4ea'),
+    rect('#8a6d3b', 12, 11, 3, 2),
+  ],
+  HKG: [fill('#de2910'), mask(BAUHINIA, WHITE, 10, 5)],
+  IND: [hs(['#ff9933', WHITE, '#138808']), ring('#000080', 13.5, 9, 2.7, 1.9), disc('#000080', 13.5, 9, 0.7)],
+  IDN: [hs(['#ce1126', WHITE])],
+  IRN: [hs(['#239f40', WHITE, '#da0000']), mask(['.#.#.', '#.#.#', '#.#.#', '.#.#.', '..#..'], '#da0000', 11, 7)],
+  IRQ: [hs(['#ce1126', WHITE, BLACK]), mask(['#.##.#.##', '#.#..#.#.', '###.##.##'], '#007a3d', 9, 7)],
+  JPN: [fill(WHITE), disc('#bc002d', 13.5, 9, 5.2)],
+  JOR: [hs([BLACK, WHITE, '#007a3d']), hoistTriangle('#ce1126', 13), star(WHITE, 4.3, 9, 1.7)],
+  PRK: [hs(['#024fa2', WHITE, '#ed1c27', WHITE, '#024fa2'], [3, 1, 8, 1, 3]), disc(WHITE, 9, 9, 3.3), star('#ed1c27', 9, 9.2, 2.9)],
+  KOR: [
+    fill(WHITE),
+    disc('#cd2e3a', 13.5, 9, 4.3),
+    each((x, y) => (x - 13.5) ** 2 + (y - 9) ** 2 <= 4.3 ** 2 && y - 9 + (x - 13.5) * 0.5 > 0)('#0047a0'),
+    rect(BLACK, 3, 2, 4, 1),
+    rect(BLACK, 3, 4, 4, 1),
+    rect(BLACK, 20, 2, 4, 1),
+    rect(BLACK, 20, 4, 4, 1),
+    rect(BLACK, 3, 13, 4, 1),
+    rect(BLACK, 3, 15, 4, 1),
+    rect(BLACK, 20, 13, 4, 1),
+    rect(BLACK, 20, 15, 4, 1),
+  ],
+  KUW: [hs(['#007a3d', WHITE, '#ce1126']), each((x, y) => x < 7 && Math.abs(y - 9) < 9 - x * (6 / 7))(BLACK)],
+  KGZ: [fill('#e8112d'), disc('#ffef00', 13.5, 9, 4.6), ring('#e8112d', 13.5, 9, 3.3, 2.5), rect('#e8112d', 12, 7, 3, 1), rect('#e8112d', 12, 10, 3, 1)],
+  LAO: [hs(['#ce1126', '#002868', '#ce1126'], [1, 2, 1]), disc(WHITE, 13.5, 9, 3.2)],
+  LBN: [hs(['#ed1c24', WHITE, '#ed1c24'], [1, 2, 1]), mask(CEDAR, '#00a651', 10, 5)],
+  MAC: [
+    fill('#00785e'),
+    mask(['..#.#..', '.##.##.', '#######', '.#####.'], WHITE, 10, 8),
+    rect(WHITE, 9, 13, 9, 1),
+    dots('#fbd116', [[13, 3], [10, 4], [16, 4], [8, 6], [18, 6]]),
+  ],
+  MAS: [
+    hs(Array.from({ length: 14 }, (_, i) => (i % 2 ? WHITE : '#cc0001'))),
+    rect('#010066', 0, 0, 14, 10),
+    crescent('#ffcc00', 5.2, 5, 3.5, 1.3, 2.9),
+    star('#ffcc00', 10.4, 5, 2.2),
+  ],
+  MDV: [fill('#d21034'), rect('#007e3a', 5, 4, 17, 10), crescent(WHITE, 14.5, 9, 3.4, 1.3, 2.8)],
+  MNG: [vs(['#c4272f', '#015197', '#c4272f']), mask(SOYOMBO, '#f9cf02', 3, 5)],
+  MYA: [hs(['#fecb00', '#34b233', '#ea2839']), star(WHITE, 13.5, 9.6, 5)],
+  NEP: [fill('#eef2f7'), each(nepal(1))('#003893'), each(nepal(0))('#dc143c'), disc(WHITE, 5, 5.5, 1.3), disc(WHITE, 5, 13.5, 1.6)],
+  OMA: [hs([WHITE, '#db161b', '#008000']), rect('#db161b', 0, 0, 8, H), mask(['#.#', '.#.', '#.#'], WHITE, 2, 1)],
+  PAK: [fill('#01411c'), rect(WHITE, 0, 0, 7, H), crescent(WHITE, 16.5, 9, 4.8, 1.8, 4.1), star(WHITE, 19.5, 7, 1.7)],
+  PLE: [hs([BLACK, WHITE, '#009736']), hoistTriangle('#ce1126', 12)],
+  PHI: [hs(['#0038a8', '#ce1126']), hoistTriangle(WHITE, 15.6), disc('#fcd116', 5, 9, 2), dots('#fcd116', [[1, 2], [1, 15], [11, 9]])],
+  QAT: [fill('#8a1538'), serrated(WHITE, 6, 3, 6)],
+  KSA: [fill('#006c35'), mask(['##.#.##.#.#', '#.#.##.#.##', '###########'], WHITE, 8, 5), rect(WHITE, 8, 11, 11, 1), dots(WHITE, [[18, 10]])],
+  SGP: [hs(['#ef3340', WHITE]), crescent(WHITE, 5.5, 4.5, 3.2, 1.2, 2.8), dots(WHITE, [[10, 2], [8, 3], [12, 3], [9, 6], [11, 6]])],
+  SRI: [fill('#ffb700'), rect('#00534e', 1, 1, 4, 16), rect('#ff5b00', 5, 1, 4, 16), rect('#8d153a', 10, 1, 16, 16), mask(LION, '#ffb700', 15, 6)],
+  SYR: [hs(['#007a3d', WHITE, BLACK]), star('#ce1126', 7.5, 9.3, 2.3), star('#ce1126', 13.5, 9.3, 2.3), star('#ce1126', 19.5, 9.3, 2.3)],
+  TJK: [hs(['#cc0000', WHITE, '#006600'], [2, 3, 2]), mask(['#.#.#', '#####', '.###.'], '#f8c300', 11, 7)],
+  THA: [hs(['#a51931', WHITE, '#2d2a4a', WHITE, '#a51931'], [1, 1, 2, 1, 1])],
+  TLS: [fill('#dc241f'), hoistTriangle('#ffc726', 15), hoistTriangle(BLACK, 10), star(WHITE, 3.6, 9, 2)],
+  TKM: [
+    fill('#00843d'),
+    rect('#d22630', 3, 0, 5, H),
+    dots('#fcd116', [[5, 1], [5, 4], [5, 7], [5, 10], [5, 13], [5, 16]]),
+    crescent(WHITE, 12, 4.5, 2.8, 1.1, 2.4),
+    dots(WHITE, [[14, 2], [15, 4], [14, 6]]),
+  ],
+  UAE: [hs(['#00732f', WHITE, BLACK]), rect('#ff0000', 0, 0, 7, H)],
+  UZB: [
+    hs(['#0099b5', '#ce1126', WHITE, '#ce1126', '#1eb53a'], [5, 1, 6, 1, 5]),
+    crescent(WHITE, 4, 2.5, 2, 0.8, 1.6),
+    dots(WHITE, [[8, 1], [10, 1], [12, 1], [9, 3], [11, 3], [13, 3]]),
+  ],
+  VIE: [fill('#da251d'), star('#ffff00', 13.5, 9.4, 5.5)],
+  YEM: [hs(['#ce1126', WHITE, BLACK])],
+  NMI: [fill('#0071bc'), disc('#9e9e9e', 13.5, 9, 4.2), star(WHITE, 13.5, 9.2, 3.4)],
+  RVN: [fill('#ffc400'), rect('#da251d', 0, 7, W, 1), rect('#da251d', 0, 9, W, 1), rect('#da251d', 0, 11, W, 1)],
+  YMD: [hs(['#ce1126', WHITE, BLACK]), hoistTriangle('#3cb0e0', 11), star('#ce1126', 3.8, 9, 1.8)],
+  DEI: [hs(['#ae1c28', WHITE, '#21468b'])],
+
+  // ─── Africa ─────────────────────────────────────────────────────────────────
+  ALG: [vs(['#006233', WHITE]), crescent('#d21034', 14.8, 9, 4.6, 1.6, 3.8), star('#d21034', 16.8, 9.2, 1.8)],
+  ANG: [hs(['#cc092f', BLACK]), ring('#ffcb00', 13.5, 9, 3.4, 2.4), star('#ffcb00', 13.5, 8.8, 1.3)],
+  BEN: [hs(['#fcd116', '#e8112d']), rect('#008751', 0, 0, 11, H)],
+  BOT: [hs(['#75aadb', WHITE, BLACK, WHITE, '#75aadb'], [9, 1, 3, 1, 9])],
+  BFA: [hs(['#ef2b2d', '#009e49']), star('#fcd116', 13.5, 9.2, 3)],
+  BDI: [
+    fill('#1eb53a'),
+    each((x, y) => Math.abs((y - 9) / 9) > Math.abs((x - 13.5) / 13.5))('#ce1126'),
+    saltire(WHITE, 2.6),
+    disc(WHITE, 13.5, 9, 4.2),
+    star('#ce1126', 13.5, 6.8, 1.3),
+    star('#ce1126', 11.4, 10.6, 1.3),
+    star('#ce1126', 15.6, 10.6, 1.3),
+  ],
+  CMR: [vs(['#007a5e', '#ce1126', '#fcd116']), star('#fcd116', 13.5, 9.2, 2.8)],
+  CPV: [
+    fill('#003893'),
+    rect(WHITE, 0, 10, W, 1),
+    rect('#cf2027', 0, 11, W, 1),
+    rect(WHITE, 0, 12, W, 1),
+    dots('#f7d116', [[13, 11], [13, 13], [11, 14], [8, 14], [6, 13], [6, 11], [6, 8], [8, 7], [11, 7], [13, 8]]),
+  ],
+  CTA: [hs(['#003082', WHITE, '#289728', '#ffce00']), rect('#d21034', 11, 0, 5, H), star('#ffce00', 4.5, 2.4, 1.7)],
+  CHA: [vs(['#002664', '#fecb00', '#c60c30'])],
+  COM: [
+    hs(['#ffc61e', WHITE, '#ce1126', '#3a75c4']),
+    hoistTriangle('#3d8e33', 12),
+    crescent(WHITE, 4.5, 9, 3.1, 1.3, 2.6),
+    dots(WHITE, [[6, 6], [7, 8], [7, 10], [6, 12]]),
+  ],
+  CGO: [fill('#fbde4a'), upperLeft('#009543', 0.75), lowerRight('#dc241f', 1.25)],
+  COD: [fill('#007fff'), band('#f7d618', 6.2), band('#ce1021', 4.2), star('#f7d618', 5, 4.6, 3)],
+  DJI: [hs(['#6ab2e7', '#12ad2b']), hoistTriangle(WHITE, 13), star('#d7141a', 4.5, 9.2, 1.8)],
+  EGY: [hs(['#ce1126', WHITE, BLACK]), mask(['#.#.#', '.###.', '..#..', '.###.'], '#c09300', 11, 7)],
+  EQG: [hs(['#3e9a00', WHITE, '#e32118']), hoistTriangle('#0073ce', 8), mask(SMALL_SHIELD, '#9e9e9e', 11, 6)],
+  ERI: [hs(['#12ad2b', '#4189dd']), each((x, y) => x < W * (1 - Math.abs(y - 9) / 9))('#ea0437'), ring('#ffc726', 6, 9, 3, 2.1)],
+  SWZ: [
+    hs(['#3e5eb9', '#ffd900', '#b10c0c', '#ffd900', '#3e5eb9'], [3, 1, 6, 1, 3]),
+    each((x, y) => ((x - 13.5) / 5) ** 2 + ((y - 9) / 2.2) ** 2 <= 1)(WHITE),
+    each((x, y) => ((x - 13.5) / 5) ** 2 + ((y - 9) / 2.2) ** 2 <= 1 && x > 13.5)(BLACK),
+  ],
+  ETH: [hs(['#078930', '#fcdd09', '#da121a']), disc('#0f47af', 13.5, 9, 3.6), star('#fcdd09', 13.5, 9.2, 2.4)],
+  GAB: [hs(['#009e60', '#fcd116', '#3a75c4'])],
+  GAM: [hs(['#ce1126', WHITE, '#0c1c8c', WHITE, '#3a7728'], [6, 1, 4, 1, 6])],
+  GHA: [hs(['#ce1126', '#fcd116', '#006b3f']), star(BLACK, 13.5, 9.2, 2.8)],
+  GUI: [vs(['#ce1126', '#fcd116', '#009460'])],
+  GNB: [hs(['#fcd116', '#009e49']), rect('#ce1126', 0, 0, 9, H), star(BLACK, 4.5, 9.2, 2.6)],
+  CIV: [vs(['#f77f00', WHITE, '#009e60'])],
+  KEN: [
+    hs([BLACK, WHITE, '#bb0000', WHITE, '#006600'], [5, 1, 6, 1, 5]),
+    each((x, y) => ((x - 13.5) / 2.6) ** 2 + ((y - 9) / 6) ** 2 <= 1)('#bb0000'),
+    each((x, y) => ((x - 13.5) / 2.6) ** 2 + ((y - 9) / 6) ** 2 <= 1 && Math.abs(x - 13.5) > 1.3)(BLACK),
+    rect(WHITE, 13, 7, 1, 4),
+  ],
+  LES: [hs(['#00209f', WHITE, '#009543'], [3, 4, 3]), mask(['..#..', '.###.', '#####'], BLACK, 11, 7)],
+  LBR: [hs(Array.from({ length: 11 }, (_, i) => (i % 2 ? WHITE : '#bf0a30'))), rect('#002868', 0, 0, 9, 8), star(WHITE, 4.5, 4.2, 2.4)],
+  LBY: [hs(['#e70013', BLACK, '#239e46'], [1, 2, 1]), crescent(WHITE, 13, 9, 3, 1.1, 2.5), star(WHITE, 15.6, 9.2, 1.3)],
+  MAD: [hs(['#fc3d32', '#007e3a']), rect(WHITE, 0, 0, 9, H)],
+  MWI: [hs([BLACK, '#ce1126', '#339e35']), each((x, y) => y < 6 && (x - 13.5) ** 2 + (y - 6) ** 2 < 16)('#ce1126')],
+  MLI: [vs(['#14b53a', '#fcd116', '#ce1126'])],
+  MTN: [
+    fill('#00a95c'),
+    rect('#d01c1f', 0, 0, W, 3),
+    rect('#d01c1f', 0, 15, W, 3),
+    each((x, y) => (x - 13.5) ** 2 + (y - 9) ** 2 <= 4.2 ** 2 && (x - 13.5) ** 2 + (y - 7.4) ** 2 > 3.8 ** 2)('#ffd700'),
+    star('#ffd700', 13.5, 7.2, 1.6),
+  ],
+  MRI: [hs(['#ea2839', '#1a206d', '#ffd500', '#00a551'])],
+  MAR: [fill('#c1272d'), star('#006233', 13.5, 9.8, 5.6), star('#c1272d', 13.5, 9.8, 2.9)],
+  MOZ: [
+    hs(['#007168', WHITE, BLACK, WHITE, '#fce100'], [5, 1, 5, 1, 5]),
+    hoistTriangle('#d21034', 12),
+    star('#fce100', 4.3, 9.2, 2.1),
+  ],
+  NAM: [fill('#009543'), upperLeft('#003580'), band(WHITE, 6.6), band('#d21034', 4.6), disc('#ffce00', 5, 4.5, 2)],
+  NIG: [hs(['#e05206', WHITE, '#0db02b']), disc('#e05206', 13.5, 9, 2)],
+  NGA: [vs(['#008751', WHITE, '#008751'])],
+  RWA: [hs(['#00a1de', '#fad201', '#20603d'], [2, 1, 1]), disc('#e5be01', 21, 4.5, 2.2)],
+  STP: [hs(['#12ad2b', '#ffce00', '#12ad2b'], [1, 2, 1]), hoistTriangle('#d21034', 9), star(BLACK, 13, 9.2, 1.9), star(BLACK, 19, 9.2, 1.9)],
+  SEN: [vs(['#00853f', '#fdef42', '#e31b23']), star('#00853f', 13.5, 9.2, 2.6)],
+  SEY: [
+    fill('#007a3d'),
+    each((x, y) => Math.atan2(H - y, x) > 0.32)(WHITE),
+    each((x, y) => Math.atan2(H - y, x) > 0.62)('#d62828'),
+    each((x, y) => Math.atan2(H - y, x) > 0.95)('#fcd856'),
+    each((x, y) => Math.atan2(H - y, x) > 1.25)('#003f87'),
+  ],
+  SLE: [hs(['#1eb53a', WHITE, '#0072c6'])],
+  SOM: [fill('#4189dd'), star(WHITE, 13.5, 9.4, 4)],
+  RSA: [
+    hs(['#e03c31', '#001489']),
+    each((x, y) => (x <= 10 ? Math.abs(y - 0.9 * x) < 3.2 || Math.abs(y - (H - 0.9 * x)) < 3.2 : Math.abs(y - 9) < 3.2))(WHITE),
+    each((x, y) => (x <= 10 ? Math.abs(y - 0.9 * x) < 2.1 || Math.abs(y - (H - 0.9 * x)) < 2.1 : Math.abs(y - 9) < 2.1))('#007a4d'),
+    each((x, y) => x < 8 * (1 - Math.abs(y - 9) / 8))('#ffb612'),
+    each((x, y) => x < 6.2 * (1 - Math.abs(y - 9) / 6.2))(BLACK),
+  ],
+  SSD: [
+    hs([BLACK, WHITE, '#da121a', WHITE, '#078930'], [5, 1, 6, 1, 5]),
+    hoistTriangle('#0f47af', 11),
+    star('#fcdd09', 3.8, 9.2, 1.8),
+  ],
+  SDN: [hs(['#d21034', WHITE, BLACK]), hoistTriangle('#007229', 10)],
+  TAN: [fill('#1eb53a'), lowerRight('#00a3dd'), band('#fcd116', 6.6), band(BLACK, 4.6)],
+  TOG: [hs(['#006a4e', '#ffce00', '#006a4e', '#ffce00', '#006a4e']), rect('#d21034', 0, 0, 11, 11), star(WHITE, 5.5, 5.7, 3)],
+  TUN: [fill('#e70013'), disc(WHITE, 13.5, 9, 4.6), crescent('#e70013', 12.9, 9, 3.4, 1.4, 2.7), star('#e70013', 15.2, 9.2, 1.8)],
+  UGA: [hs([BLACK, '#fcdc04', '#d90000', BLACK, '#fcdc04', '#d90000']), disc(WHITE, 13.5, 9, 3.4), disc('#9ca69c', 13.5, 9, 1.4)],
+  ZAM: [
+    fill('#198a00'),
+    rect('#de2010', 16, 7, 3, 11),
+    rect(BLACK, 19, 7, 3, 11),
+    rect('#ef7d00', 22, 7, 3, 11),
+    mask(['#.#.#', '.###.', '..#..'], '#ef7d00', 19, 2),
+  ],
+  ZIM: [
+    hs(['#319208', '#ffd200', '#de2010', BLACK, '#de2010', '#ffd200', '#319208']),
+    hoistTriangle(BLACK, 12.5),
+    hoistTriangle(WHITE, 11.3),
+    star('#de2010', 4, 9.2, 2),
+  ],
+
+  // ─── Oceania ───────────────────────────────────────────────────────────────
+  ASA: [
+    fill('#002b7f'),
+    each((x, y) => x > (W * Math.abs(y - 9)) / 9 - 2)('#bd1021'),
+    each((x, y) => x > (W * Math.abs(y - 9)) / 9 + 0.8)(WHITE),
+    mask(EAGLE, '#8a5a2b', 15, 5),
+  ],
+  COK: [fill('#012169'), unionCanton(), ring(WHITE, 20, 9, 5, 4)],
+  FIJ: [fill('#68bfe5'), unionCanton(), mask(SMALL_SHIELD, WHITE, 18, 6, { outline: '#ce1126' })],
+  NCL: [hs(['#0035ad', '#ed4135', '#009543']), disc('#fae600', 10, 9, 5.2), rect(BLACK, 9, 5, 2, 8), rect(BLACK, 7, 6, 6, 1)],
+  NZL: [
+    fill('#012169'),
+    unionCanton(),
+    star(WHITE, 20.5, 14.5, 1.9),
+    star(WHITE, 20.5, 3.5, 1.7),
+    star(WHITE, 17.5, 8, 1.6),
+    star(WHITE, 23.5, 7, 1.6),
+    dots('#c8102e', [[20, 14], [20, 3], [17, 7], [23, 6]]),
+  ],
+  PNG: [fill('#ce1126'), lowerLeft(BLACK), mask(BIRD, '#fcd116', 16, 3), dots(WHITE, [[5, 10], [7, 12], [4, 13], [6, 15], [5, 12]])],
+  SAM: [fill('#ce1126'), rect('#002b7f', 0, 0, 13, 9), dots(WHITE, [[6, 2], [9, 4], [4, 4], [6, 7], [8, 6]])],
+  SOL: [fill('#0051ba'), lowerRight('#215b33'), band('#fcd116', 1.8), dots(WHITE, [[2, 2], [5, 2], [3, 4], [2, 6], [5, 6]])],
+  TAH: [hs(['#ce1126', WHITE, '#ce1126'], [1, 2, 1]), disc('#f5b400', 13.5, 9, 2.5), rect('#1f4aa8', 11, 10, 5, 1)],
+  TGA: [fill('#c10000'), rect(WHITE, 0, 0, 12, 9), rect('#c10000', 5, 2, 2, 5), rect('#c10000', 3, 3, 6, 2)],
+  VAN: [
+    hs(['#d21034', '#009543']),
+    hoistTriangle(BLACK, 12.5),
+    each(
+      (x, y) =>
+        (x > 7.8 && Math.abs(y - 9) < 0.9) || (x <= 8.8 && (Math.abs(y - 1.03 * x) < 0.9 || Math.abs(y - (H - 1.03 * x)) < 0.9)),
+    )('#fdce12'),
+    disc('#fdce12', 3.2, 9, 1.4),
+  ],
+};
+
+const flagCache = new Map();
+
+/** @returns {{w:number, h:number, paths:[string,string][]}} */
+export function getFlagArt(id) {
+  let art = flagCache.get(id);
+  if (art) return art;
+  const px = new Array(W * H).fill('#888888');
+  for (const op of FLAG_SPECS[id] ?? [fill('#888888')]) op(px);
+  art = { w: W, h: H, paths: toPaths(px, W, H) };
+  flagCache.set(id, art);
+  return art;
+}
