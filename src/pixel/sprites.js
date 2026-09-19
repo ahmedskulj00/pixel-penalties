@@ -328,7 +328,9 @@ function applyPattern(g, pattern) {
           ? ((x >> 1) + (y >> 1)) % 2 === 0
           : pattern === 'sash'
             ? Math.abs(x - (w - 1 - y * 0.6)) < 2.2
-            : x < w / 2;
+            : pattern === 'stripes'
+              ? (x >> 1) % 2 === 0
+              : x < w / 2;
       if (on) out[y * w + x] = ALT;
     }
   }
