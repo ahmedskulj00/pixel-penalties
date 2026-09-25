@@ -1,11 +1,11 @@
-import { useDeferredValue, useId, useState } from 'react';
+import { memo, useDeferredValue, useId, useMemo, useState } from 'react';
 import { NATION_BY_ID, nameIn, activeLabel } from '../data/nations.js';
 import { Flag, Stars } from './pixel.jsx';
 import { play } from '../audio/sfx.js';
 
 const fold = (s) => s.normalize('NFD').replace(/[\u0300-\u036f]/g, '').toLowerCase();
 
-function NationTile({ id, year, selected, onSelect, tag }) {
+function NationTileView({ id, year, selected, onSelect, tag }) {
   const n = NATION_BY_ID.get(id);
   const name = nameIn(n, year);
   return (
@@ -28,25 +28,33 @@ function NationTile({ id, year, selected, onSelect, tag }) {
   );
 }
 
+// Memoised: selecting a nation or typing a search re-renders only the tiles that change.
+const NationTile = memo(NationTileView);
+
 /**
  * sections: [{ title, ids, tag? }] – rendered in order, filtered by the search box.
+ * `onSelect` should be stable (a state setter or a useCallback) so the tiles can skip re-rendering.
  */
 export function NationPicker({ sections, year, selected, onSelect, autoFocus = false }) {
   const [query, setQuery] = useState('');
   const deferred = useDeferredValue(query);
   const searchId = useId();
   const q = fold(deferred.trim());
-  const visible = sections
-    .map((s) => ({
-      ...s,
-      ids: q
-        ? s.ids.filter((id) => {
-            const n = NATION_BY_ID.get(id);
-            return fold(nameIn(n, year)).includes(q) || fold(n.name).includes(q) || n.id.toLowerCase().includes(q);
-          })
-        : s.ids,
-    }))
-    .filter((s) => s.ids.length);
+  const visible = useMemo(
+    () =>
+      sections
+        .map((s) => ({
+          ...s,
+          ids: q
+            ? s.ids.filter((id) => {
+                const n = NATION_BY_ID.get(id);
+                return fold(nameIn(n, year)).includes(q) || fold(n.name).includes(q) || n.id.toLowerCase().includes(q);
+              })
+            : s.ids,
+        }))
+        .filter((s) => s.ids.length),
+    [sections, q, year],
+  );
   const total = visible.reduce((a, s) => a + s.ids.length, 0);
 
   return (

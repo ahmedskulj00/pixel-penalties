@@ -1,3 +1,4 @@
+import { memo } from 'react';
 import { getArt } from '../pixel/sprites.js';
 import { getFlagArt, FLAG_W, FLAG_H } from '../pixel/flags.js';
 import { TROPHY_PALETTES } from '../pixel/colors.js';
@@ -38,7 +39,7 @@ export function PixelSprite({ pose, palette, scale = 4, className, label, patter
   );
 }
 
-export function Flag({ id, size = 'md', className = '', label }) {
+function FlagView({ id, size = 'md', className = '', label }) {
   const art = getFlagArt(id);
   const name = label === true ? NATION_BY_ID.get(id)?.name : label;
   return (
@@ -57,7 +58,7 @@ export function Flag({ id, size = 'md', className = '', label }) {
   );
 }
 
-export function TrophyIcon({ kind = 'gold', scale = 3, className, label }) {
+function TrophyIconView({ kind = 'gold', scale = 3, className, label }) {
   return (
     <PixelSprite pose="trophy" palette={TROPHY_PALETTES[kind] ?? TROPHY_PALETTES.gold} scale={scale} className={className} label={label} />
   );
@@ -83,7 +84,7 @@ function starPaths(rating) {
 }
 
 /** Five pixel stars; fractional ratings fill column by column. */
-export function Stars({ rating, label = true }) {
+function StarsView({ rating, label = true }) {
   const { on, off } = starPaths(rating);
   return (
     <svg
@@ -115,3 +116,9 @@ export function KickMark({ value }) {
     </svg>
   );
 }
+
+// Leaf components with primitive props that repeat by the hundred (nation pickers, tables,
+// brackets): memoised so a parent update only re-renders the ones whose props changed.
+export const Flag = memo(FlagView);
+export const TrophyIcon = memo(TrophyIconView);
+export const Stars = memo(StarsView);

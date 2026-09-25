@@ -1,4 +1,4 @@
-import { useState } from 'react';
+import { useMemo, useState } from 'react';
 import {
   GROUPS,
   COMPETITIONS,
@@ -180,8 +180,9 @@ function byConfederation(ids, prefix, year) {
   return filled.map(([g, list]) => ({ title: `${prefix}: ${GROUP_LABELS[g]}`, ids: list }));
 }
 
-function NationStep({ comp, edition, nationId, setNationId, dream, setDream }) {
-  const field = (edition.field ?? []).filter((id) => NATIONS.some((n) => n.id === id));
+/** Picker sections for an edition: the real line-up, everyone else eligible, then dream entries. */
+function nationSections(comp, edition, dream) {
+  const field = (edition.field ?? []).filter((id) => NATION_BY_ID.has(id));
   const eligible = eligibleIds(comp, edition);
   const inField = new Set(field);
   const others = eligible.filter((id) => !inField.has(id));
@@ -196,6 +197,12 @@ function NationStep({ comp, edition, nationId, setNationId, dream, setDream }) {
     if (others.length) sections.push(...byConfederation(others, field.length ? `Also eligible in ${edition.year}` : `Eligible in ${edition.year}`, edition.year));
   }
   if (dream && rest.length) sections.push(...byConfederation(rest, 'Dream entries'));
+  return { sections, eligible };
+}
+
+function NationStep({ comp, edition, nationId, setNationId, dream, setDream }) {
+  // Cached per edition, so picking a nation only re-renders the two tiles that change.
+  const { sections, eligible } = useMemo(() => nationSections(comp, edition, dream), [comp, edition, dream]);
 
   return (
     <div className="step-body">

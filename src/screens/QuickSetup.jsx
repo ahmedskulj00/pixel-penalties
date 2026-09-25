@@ -1,4 +1,4 @@
-import { useState } from 'react';
+import { useCallback, useState } from 'react';
 import { NATIONS, GROUP_LABELS, CURRENT_YEAR, fifaMember, getNation } from '../data/nations.js';
 import { Flag } from '../components/pixel.jsx';
 import { Button, BackIcon, IconButton } from '../components/ui.jsx';
@@ -33,16 +33,20 @@ export default function QuickSetup({ initial, onStart, onHome }) {
   const [cpuId, setCpuId] = useState(initial?.cpuId ?? null);
   const [picking, setPicking] = useState(initial?.userId ? 'cpu' : 'user');
 
-  const choose = (id) => {
-    if (picking === 'user') {
-      setUserId(id);
-      if (cpuId === id) setCpuId(null);
-      setPicking('cpu');
-    } else {
-      if (id === userId) return;
-      setCpuId(id);
-    }
-  };
+  // Stable between renders so the nation tiles can skip re-rendering.
+  const choose = useCallback(
+    (id) => {
+      if (picking === 'user') {
+        setUserId(id);
+        if (cpuId === id) setCpuId(null);
+        setPicking('cpu');
+      } else {
+        if (id === userId) return;
+        setCpuId(id);
+      }
+    },
+    [picking, userId, cpuId],
+  );
 
   const randomOpponent = () => {
     const rng = createRng(newSeed());
