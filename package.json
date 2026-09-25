@@ -3,10 +3,12 @@
   "version": "1.0.0",
   "private": true,
   "type": "module",
-  "description": "Pixel-art penalty shootouts for every European nation and competition. React 19 + React Compiler.",
+  "description": "Pixel-art penalty shootouts for every national team and international tournament. React 19 + Vite.",
   "scripts": {
-    "build": "node build.mjs",
-    "dev": "node build.mjs --watch",
+    "dev": "vite",
+    "build": "vite build",
+    "build:debug": "vite build --mode development",
+    "preview": "vite preview",
     "test": "node --test \"tests/*.test.mjs\""
   },
   "dependencies": {
@@ -14,8 +16,8 @@
     "react-dom": "19.3.0"
   },
   "devDependencies": {
-    "@babel/core": "^7.28.0",
-    "babel-plugin-react-compiler": "1.0.0",
-    "esbuild": "0.28.2"
+    "@vitejs/plugin-react": "^6.1.1",
+    "vite": "^8.3.1",
+    "vite-plugin-singlefile": "^2.3.3"
   }
 }

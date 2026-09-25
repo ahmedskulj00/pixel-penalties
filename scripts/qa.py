@@ -1,6 +1,7 @@
-"""Browser QA for dist/index.html: plays a tournament match end to end and screenshots each step.
+"""Browser QA for the built page: plays a tournament match end to end and screenshots each step.
 
 Usage: python3 scripts/qa.py [desktop|mobile|dark|quick|all]
+QA_FILE=dist-debug/index.html checks the development build (npm run build:debug) instead of dist/index.html.
 Fonts are served locally from @fontsource packages because the sandbox has no Google Fonts access.
 """
 import asyncio
@@ -31,7 +32,7 @@ FONT_CSS = ''.join(
 )
 
 import os
-URL = (ROOT / 'dist' / os.environ.get('QA_FILE', 'index.html')).as_uri()
+URL = (ROOT / os.environ.get('QA_FILE', 'dist/index.html')).as_uri()
 
 
 async def open_page(browser, name, viewport, scheme='light', reduced=False):
