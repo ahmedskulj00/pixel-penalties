@@ -4,6 +4,9 @@
   "private": true,
   "type": "module",
   "description": "Pixel-art penalty shootouts for every national team and international tournament. React 19 + Vite.",
+  "engines": {
+    "node": ">=22.12"
+  },
   "scripts": {
     "dev": "vite",
     "build": "vite build",
