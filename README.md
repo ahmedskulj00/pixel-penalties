@@ -15,6 +15,8 @@ Vietnam) and 31 competitions with 462 editions, from the 1916 South American Cha
     npm run preview      # serve the production build locally
     npm test             # data integrity, title counts, shootout rules, every edition played to a finish
 
+Node 22.12 or later is required (Vite 8 and the test runner's file globs need it).
+
 ## Structure
 
     src/data/nations.js       teams: kits, era names (Zaire, Burma, Ceylon…), confederation membership by year, bans
@@ -28,6 +30,8 @@ Vietnam) and 31 competitions with 462 editions, from the 1916 South American Cha
     src/screens/              home, setup wizard, quick shootout, tournament hub (groups and bracket), match, cabinet
     scripts/qa.py             Playwright run-through with screenshots (QA_FILE=dist-debug/index.html for the debug build)
     vite.config.js            Vite 8 with @vitejs/plugin-react; vite-plugin-singlefile inlines the bundle
+    scripts/replay-history.mjs  rebuilds the git history from the project's milestones (see --help)
+    .github/workflows/        CI (tests and build on every push) and an on-demand GitHub Pages deploy
 
 ## Competitions
 
