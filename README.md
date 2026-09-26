@@ -95,16 +95,3 @@ Senegal won the final; the edition note says so.
 Group matchdays run in parallel: when you finish your shootout, every other fixture on that
 matchday is simulated. Groups of three or five give each team a rest day. Regions with fewer
 teams than places (such as SAFF 2018) play smaller groups.
-
-## Notes on the React side
-
-React 19.3, built with Vite 8. Memoisation is manual and targeted rather than compiled: the
-components that repeat by the hundred (flags, stars, trophies, nation tiles) are wrapped in memo,
-the handlers passed to them are stable, and the nation picker caches its sections, so picking a
-nation or typing a search re-renders only what changed. Timed against the earlier React Compiler
-build with the CPU throttled 4×, every interaction is as fast within measurement noise, or faster (a search keystroke on
-the 210-team World Cup picker went from 53 to 35 ms). Shortcuts use useEffectEvent so listeners never go
-stale; the strike meter runs on requestAnimationFrame and writes styles directly, so it never
-re-renders React at 60 fps; kicks are choreographed with the Web Animations API on transforms
-and cancelled through an AbortSignal. Every random decision happens in event handlers,
-never during render.
