@@ -77,8 +77,7 @@ export default function Home({ go, openHowTo }) {
           <span className="title__line title__line--accent">Penalties</span>
         </h1>
         <p className="lede">
-          Every national team, every international tournament from {FIRST_YEAR} to {LAST_YEAR}. Settle them all from twelve
-          yards, one calm decision at a time.
+          Every national team, every international tournament from {FIRST_YEAR} to {LAST_YEAR}. Settle them all from the penalty spot, one calm decision at a time.
         </p>
         <dl className="home__stats">
           <div>
