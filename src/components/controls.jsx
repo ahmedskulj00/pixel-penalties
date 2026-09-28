@@ -1,7 +1,7 @@
 import { useEffect, useImperativeHandle, useRef } from 'react';
 import { ZONES, TECHNIQUE, DIFFICULTY, sweetSpot, composure, gradeStrike, COMPOSURE_BONUS, marks, tally } from '../engine/shootout.js';
 import { Flag, KickMark } from './pixel.jsx';
-import { Button, BallIcon } from './ui.jsx';
+import { Button, BallIcon, DiveIcon } from './ui.jsx';
 
 function RiskPips({ level }) {
   return (
@@ -149,18 +149,25 @@ export function StrikeMeter({ ref, zone, difficulty, rating, calm, onStrike, onC
 }
 
 /** Keeper's choice when the computer shoots. */
+const DIVES = [
+  { label: 'Dive left', key: 'A' },
+  { label: 'Stay big', key: 'S' },
+  { label: 'Dive right', key: 'D' },
+];
+
+/** Keeper controls, laid out like the aim pad: icon above a centred label, keyboard key in the corner. */
 export function DivePad({ onDive }) {
   return (
     <div className="divepad" role="group" aria-label="Choose which way to dive">
-      <Button variant="secondary" size="lg" kbd="A" onClick={() => onDive(0)} sound={null}>
-        ◀ Dive left
-      </Button>
-      <Button variant="secondary" size="lg" kbd="S" onClick={() => onDive(1)} sound={null}>
-        Stay big
-      </Button>
-      <Button variant="secondary" size="lg" kbd="D" onClick={() => onDive(2)} sound={null}>
-        Dive right ▶
-      </Button>
+      {DIVES.map((d, col) => (
+        <button key={d.key} type="button" className="btn btn--secondary divepad__btn" aria-keyshortcuts={d.key} onClick={() => onDive(col)}>
+          <DiveIcon col={col} />
+          <span className="divepad__label">{d.label}</span>
+          <kbd className="divepad__key" aria-hidden="true">
+            {d.key}
+          </kbd>
+        </button>
+      ))}
     </div>
   );
 }

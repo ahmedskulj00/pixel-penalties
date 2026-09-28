@@ -767,10 +767,21 @@ kbd {
 }
 
 .goal-targets__arrow {
+  display: grid;
+  width: clamp(14px, 24%, 30px);
   color: #ffffff;
-  font-size: clamp(0.9rem, 3vw, 1.6rem);
   opacity: 0.55;
-  text-shadow: 2px 2px 0 rgba(0, 0, 0, 0.5);
+  filter: drop-shadow(2px 2px 0 rgba(0, 0, 0, 0.5));
+}
+
+.goal-targets__arrow .icon {
+  width: 100%;
+  height: auto;
+}
+
+/* The middle target covers the keeper, so its icon only shows on hover rather than as a shirt print. */
+.goal-targets--dive .goal-targets__cell:nth-child(2) .goal-targets__arrow {
+  opacity: 0;
 }
 
 .goal-targets--dive .goal-targets__cell:hover .goal-targets__arrow {
@@ -1000,6 +1011,16 @@ kbd {
     padding: 17px 4px 8px;
     font-size: 0.95rem;
   }
+  .match .divepad__btn {
+    min-height: 58px;
+    gap: 5px;
+    padding: 9px 4px 10px;
+    font-size: 1rem;
+  }
+  .match .divepad__btn .icon {
+    width: 14px;
+    height: 14px;
+  }
   .match .meter {
     gap: 8px;
   }
@@ -1057,10 +1078,15 @@ kbd {
     grid-template-columns: repeat(3, 12px);
     grid-template-rows: repeat(2, 9px);
   }
-  .match .divepad .btn {
-    min-height: 48px;
-    padding: 8px 4px;
-    font-size: 0.95rem;
+  .match .divepad__btn {
+    min-height: 50px;
+    gap: 3px;
+    padding: 6px 3px 7px;
+    font-size: 0.88rem;
+  }
+  .match .divepad__btn .icon {
+    width: 12px;
+    height: 12px;
   }
 }
 
@@ -1510,17 +1536,36 @@ kbd {
   width: min(100%, 580px);
 }
 
-.divepad .btn {
-  padding-inline: 8px;
+/* Icon above a centred label, with the key pinned in the corner as on the aim pad, so every
+   button lines up whatever the label's length. */
+.divepad__btn {
+  position: relative;
+  display: grid;
+  justify-items: center;
+  align-content: center;
+  gap: 6px;
+  min-height: 66px;
+  padding: 12px 6px 13px;
+  font-size: 1.05rem;
+  line-height: 1.15;
+  text-align: center;
 }
 
-@media (max-width: 480px) {
-  .divepad .btn {
-    font-size: 1rem;
-  }
-  .divepad .btn__kbd {
-    display: none;
-  }
+.divepad__btn .icon {
+  width: 18px;
+  height: 18px;
+}
+
+.divepad__label {
+  text-wrap: balance;
+}
+
+.divepad__key {
+  position: absolute;
+  top: 4px;
+  right: 4px;
+  opacity: 0.75;
+  font-size: 0.55rem;
 }
 
 .scout {
@@ -2411,7 +2456,8 @@ kbd {
 
 @media (hover: none) and (pointer: coarse) {
   .btn__kbd,
-  .aimpad__key {
+  .aimpad__key,
+  .divepad__key {
     display: none;
   }
 }

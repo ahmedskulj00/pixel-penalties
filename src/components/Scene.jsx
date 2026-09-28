@@ -1,4 +1,5 @@
 import { Actor } from './pixel.jsx';
+import { DiveIcon } from './ui.jsx';
 import { BASE_TRANSFORM } from './choreography.js';
 import { BALL_PALETTE } from '../pixel/colors.js';
 import { createRng } from '../engine/rng.js';
@@ -166,7 +167,9 @@ export function GoalTargets({ mode, onPick, highlight, habit }) {
     <div className="goal-targets goal-targets--dive" style={GOAL_BOX} aria-hidden="true">
       {[0, 1, 2].map((col) => (
         <button key={col} type="button" tabIndex={-1} className="goal-targets__cell" onClick={() => onPick(col)}>
-          <span className="goal-targets__arrow">{col === 0 ? '◀' : col === 1 ? '■' : '▶'}</span>
+          <span className="goal-targets__arrow">
+            <DiveIcon col={col} />
+          </span>
         </button>
       ))}
     </div>
