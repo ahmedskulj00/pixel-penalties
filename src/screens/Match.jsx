@@ -285,7 +285,7 @@ export default function Match({ userId, cpuId, year, context, paused, onPause, o
       const z = zoneFor(key);
       if (confirm) {
         e.preventDefault();
-        strikeRef.current?.strike();
+        strikeRef.current?.strike(e);
       } else if (key === 'escape' || key === 'backspace') {
         e.preventDefault();
         unaim();
@@ -401,7 +401,7 @@ export default function Match({ userId, cpuId, year, context, paused, onPause, o
             </h2>
             <AimPad onAim={aim} cursor={cursor} assist={settings.assist} habit={settings.assist ? habit : null} />
             {!settings.focus && (
-              <p className="tip">
+              <p className={habit != null && settings.assist ? 'tip' : 'tip tip--optional'}>
                 {habit != null && settings.assist
                   ? 'You keep going the same way. The keeper is learning, so mix it up.'
                   : 'Decide before the run-up, then commit. More pips means a smaller sweet spot.'}
@@ -426,7 +426,7 @@ export default function Match({ userId, cpuId, year, context, paused, onPause, o
               onStrike={strike}
               onCancel={unaim}
             />
-            {!settings.focus && <p className="tip">Breathe out first. The green zone grows while you stay composed.</p>}
+            {!settings.focus && <p className="tip tip--optional">Breathe out first. The green zone grows while you stay composed.</p>}
           </div>
         )}
 

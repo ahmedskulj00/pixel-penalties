@@ -11,6 +11,15 @@ const SKIN = ['#f3cfb3', '#e8b992', '#c98c5c', '#8f5b3b', '#5e3b27'];
 const NEUTRAL = ['#e9e4d4', '#8a8fa8', '#4a4f73', '#c7c2b0'];
 const STRIPES = [52, 60, 69, 79, 90, 102, 115, 129, 144, 161, 180];
 
+/**
+ * How the 320×180 scene fills its box. Phones give it a box taller than 16:9, and the SVG then
+ * covers it and crops the stands at the sides, so the goal, keeper and taker come out about
+ * twice as big (see .scene in styles.css). Browsers without container queries, which the goal
+ * overlay needs to follow that crop, keep the whole view instead.
+ */
+const FRAMING =
+  typeof CSS !== 'undefined' && CSS.supports?.('container-type', 'size') ? 'xMidYMax slice' : 'xMidYMid meet';
+
 const crowdCache = new Map();
 
 /** Pixel crowd: your fans on the left, theirs on the right. Deterministic and cached. */
@@ -80,7 +89,14 @@ export function Scene({ refs, kicker, keeper, board, leftKit, rightKit, focus = 
   const crowd = crowdArt(leftKit, rightKit);
   return (
     <div className={`scene${focus ? ' scene--focus' : ''}`} ref={refs?.scene}>
-      <svg className="scene__svg" viewBox="0 0 320 180" shapeRendering="crispEdges" role="img" aria-label={label}>
+      <svg
+        className="scene__svg"
+        viewBox="0 0 320 180"
+        preserveAspectRatio={FRAMING}
+        shapeRendering="crispEdges"
+        role="img"
+        aria-label={label}
+      >
         <defs>
           <pattern id="pp-net" width="4" height="4" patternUnits="userSpaceOnUse">
             <path d="M0 0h4v1h-4zM0 0h1v4h-1z" className="sc-net-line" />
@@ -121,13 +137,8 @@ export function Scene({ refs, kicker, keeper, board, leftKit, rightKit, focus = 
   );
 }
 
-const pct = (v, total) => `${(v / total) * 100}%`;
-const GOAL_BOX = {
-  left: pct(GOAL.left, 320),
-  top: pct(GOAL.top, 180),
-  width: pct(GOAL.right - GOAL.left, 320),
-  height: pct(GOAL.bottom - GOAL.top, 180),
-};
+/** The goal mouth in scene units; .goal-targets turns them into a box that follows the framing. */
+const GOAL_BOX = { '--x': GOAL.left, '--y': GOAL.top, '--w': GOAL.right - GOAL.left, '--h': GOAL.bottom - GOAL.top };
 
 /**
  * Tap targets laid over the goal mouth, for pointer users. The labelled pads below the

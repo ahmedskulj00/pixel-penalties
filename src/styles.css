@@ -697,9 +697,30 @@ kbd {
   opacity: 0.2;
 }
 
+/* The goal mouth, from scene units (--x, --y, --w, --h) set by <GoalTargets>. Without container
+   queries the whole 320×180 view is shown, so plain percentages line up. */
 .goal-targets {
   position: absolute;
   display: grid;
+  left: calc(var(--x) / 320 * 100%);
+  top: calc(var(--y) / 180 * 100%);
+  width: calc(var(--w) / 320 * 100%);
+  height: calc(var(--h) / 180 * 100%);
+}
+
+@supports (container-type: size) {
+  .scene {
+    container-type: size;
+  }
+  /* The SVG covers the scene box (preserveAspectRatio "xMidYMax slice"): --u is the size of one
+     scene unit in pixels, centred horizontally and anchored to the bottom edge. */
+  .goal-targets {
+    --u: max(100cqw / 320, 100cqh / 180);
+    left: calc(50% + (var(--x) - 160) * var(--u));
+    top: calc(100% - (180 - var(--y)) * var(--u));
+    width: calc(var(--w) * var(--u));
+    height: calc(var(--h) * var(--u));
+  }
 }
 
 .goal-targets--aim {
@@ -845,6 +866,208 @@ kbd {
   }
   .scoreboard {
     padding-block: 6px;
+  }
+}
+
+/* ─── Phones: an immersive match screen ─────────────────────────────────────
+   On phones the match fills the screen exactly, with no page scrolling. The scoreboard and scene
+   run edge to edge, and the scene is taller than 16:9 so the camera frames the goal and the spot
+   (the SVG crops the stands at the sides). The scene keeps one size for the whole match; the
+   controls take the rest and only scroll inside themselves on the very smallest screens. */
+@supports (container-type: size) {
+  @media (max-width: 600px) and (orientation: portrait), (orientation: landscape) and (max-height: 560px) {
+    html:has(.app--match) {
+      overscroll-behavior-y: none;
+    }
+    .app--match {
+      display: flex;
+      flex-direction: column;
+      height: calc(100dvh - env(safe-area-inset-top, 0px) - env(safe-area-inset-bottom, 0px));
+    }
+    .app--match .topbar {
+      width: 100%;
+      padding: 4px 8px 2px;
+    }
+    .app--match > .main {
+      flex: 1;
+      width: 100%;
+      min-height: 0;
+      container-type: size;
+    }
+    .match {
+      height: 100%;
+    }
+    .match > .panel {
+      min-height: 0;
+      overflow-y: auto;
+      overscroll-behavior: contain;
+    }
+  }
+
+  @media (max-width: 600px) and (orientation: portrait) {
+    .main--match {
+      padding: 0 0 10px;
+    }
+    .match {
+      /* Room kept for the tallest controls (the strike meter), below the scoreboard and scene. */
+      --panel-room: 300px;
+      --scene-w: 100%;
+      gap: 0;
+      grid-template-rows: auto auto minmax(0, 1fr);
+    }
+    .match > .scoreboard {
+      padding: 6px 12px 7px;
+    }
+    .match .board-side__marks {
+      margin-top: 5px;
+    }
+    .match > .scene {
+      aspect-ratio: auto;
+      /* Between the classic 16:9 and nearly square; 66px is the scoreboard and the gap below it. */
+      height: clamp(56.25cqw, calc(100cqh - 66px - var(--panel-room)), 96cqw);
+      box-shadow: none;
+    }
+    .match > .panel {
+      justify-self: stretch;
+      width: auto;
+      margin: 10px 10px 0;
+      padding: 10px 12px 12px;
+    }
+  }
+
+  @media (max-width: 600px) and (orientation: portrait) and (max-height: 780px) {
+    .match {
+      --panel-room: 244px;
+    }
+  }
+
+  /* Phones on their side: the scene takes the full height on the left, and the scoreboard
+     and controls share a column on the right. */
+  @media (orientation: landscape) and (max-height: 560px) {
+    .main--match {
+      padding: 4px max(12px, env(safe-area-inset-right, 0px)) 8px max(12px, env(safe-area-inset-left, 0px));
+    }
+    .match {
+      grid-template-columns: auto minmax(236px, 1fr);
+      grid-template-rows: auto minmax(0, 1fr);
+      grid-template-areas: 'scene board' 'scene panel';
+      gap: 8px 12px;
+      align-items: stretch;
+    }
+    .match > .scene {
+      grid-area: scene;
+      aspect-ratio: auto;
+      width: min(100cqh * 16 / 9, 100cqw - 248px);
+      height: 100cqh;
+    }
+    .match > .scoreboard {
+      grid-area: board;
+      width: 100%;
+      padding: 6px 10px;
+    }
+    .match .mark {
+      width: 11px;
+      height: 11px;
+    }
+    .match .board-side__marks {
+      gap: 3px;
+      margin-top: 4px;
+    }
+    .match > .panel {
+      grid-area: panel;
+      width: 100%;
+      padding: 8px 10px 10px;
+    }
+  }
+}
+
+/* Compact controls wherever the screen is tight: phones held upright, and phones on their side. */
+@media (max-width: 600px) and (orientation: portrait), (orientation: landscape) and (max-height: 560px) {
+  .match .panel {
+    gap: 8px;
+  }
+  .match .panel__stack {
+    gap: 9px;
+  }
+  .match .panel__title {
+    font-size: 1.15rem;
+  }
+  .match .aimpad {
+    gap: 4px;
+  }
+  .match .aimpad__zone {
+    min-height: 56px;
+    padding: 17px 4px 8px;
+    font-size: 0.95rem;
+  }
+  .match .meter {
+    gap: 8px;
+  }
+  .match .meter__bar {
+    margin: 4px 3px;
+  }
+  /* Strike and "Change spot" share one row, the big button taking most of it. */
+  .match .meter__actions {
+    flex-wrap: nowrap;
+    width: 100%;
+    gap: 8px;
+  }
+  .match .meter__strike {
+    flex: 1;
+    min-width: 0;
+  }
+  .match .meter__actions .btn--ghost {
+    flex: none;
+    padding-inline: 10px;
+  }
+}
+
+/* On their side, phones have about 230px of height and 240px of width for the controls. */
+@media (orientation: landscape) and (max-height: 560px) {
+  .match .panel__stack {
+    gap: 7px;
+  }
+  .match .aimpad__zone {
+    min-height: 50px;
+    padding: 15px 2px 6px;
+    font-size: 0.86rem;
+    letter-spacing: -0.01em;
+  }
+  .match .btn--xl {
+    min-height: 50px;
+    padding: 8px 12px 10px;
+    font-size: 1.2rem;
+  }
+  .match .meter__actions .btn--ghost {
+    padding-inline: 6px;
+    font-size: 0.85rem;
+  }
+  .match .meter {
+    gap: 6px;
+  }
+  .match .meter__bar {
+    height: 32px;
+  }
+  .match .scout {
+    gap: 8px;
+    font-size: 0.88rem;
+    line-height: 1.35;
+  }
+  .match .scout__goal {
+    grid-template-columns: repeat(3, 12px);
+    grid-template-rows: repeat(2, 9px);
+  }
+  .match .divepad .btn {
+    min-height: 48px;
+    padding: 8px 4px;
+    font-size: 0.95rem;
+  }
+}
+
+/* Short screens: the general tips go (the ? help keeps them); gameplay warnings stay. */
+@media (max-width: 600px) and (orientation: portrait) and (max-height: 780px), (orientation: landscape) and (max-height: 560px) {
+  .match .tip--optional {
+    display: none;
   }
 }
 

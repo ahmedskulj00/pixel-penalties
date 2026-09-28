@@ -38,16 +38,42 @@ export function AimPad({ onAim, cursor, assist, habit }) {
   );
 }
 
+/** Where the marker is and how wide the green zone has grown, `elapsed` ms into the sweep. */
+function sweep(elapsed, period, green) {
+  const calm = composure(elapsed);
+  return { pos: 1 - Math.abs(((elapsed / period) % 1) * 2 - 1), green: green * (1 + COMPOSURE_BONUS * calm), calm };
+}
+
+/** An event's time on the performance.now() clock (now, for synthetic events or old clocks). */
+function eventTime(e) {
+  const now = performance.now();
+  const t = e?.timeStamp;
+  return typeof t === 'number' && t > 0 && t <= now + 1 ? t : now;
+}
+
+/** After acting on a press, drop the click that follows it, so it can't land on whatever replaced the button. */
+function swallowNextClick() {
+  const stop = (e) => {
+    e.preventDefault();
+    e.stopPropagation();
+  };
+  window.addEventListener('click', stop, { capture: true, once: true });
+  setTimeout(() => window.removeEventListener('click', stop, { capture: true }), 700);
+}
+
 /**
  * Step 2: timing. A marker sweeps the bar; the green sweet spot widens while you stay
  * composed (up to COMPOSURE_BONUS after COMPOSURE_MS). The rAF loop writes styles directly,
- * so the meter never re-renders React at 60 fps.
+ * so the meter never re-renders React at 60 fps. A strike is graded at the moment of the
+ * press (the finger touching down, not lifting), from the exact event time rather than the
+ * last painted frame.
  */
 export function StrikeMeter({ ref, zone, difficulty, rating, calm, onStrike, onCancel }) {
   const barRef = useRef(null);
   const trackRef = useRef(null);
   const calmRef = useRef(null);
-  const readout = useRef({ pos: 0, green: 0 });
+  const startedAt = useRef(0);
+  const pressedAt = useRef(-Infinity);
   const { green, yellow } = sweetSpot(zone, { difficulty, rating });
   const period = (DIFFICULTY[difficulty] ?? DIFFICULTY.normal).period * (calm ? 1.35 : 1);
 
@@ -58,14 +84,10 @@ export function StrikeMeter({ ref, zone, difficulty, rating, calm, onStrike, onC
     let raf = 0;
     let lastCalm = -1;
     const t0 = performance.now();
+    startedAt.current = t0;
     bar.style.setProperty('--y', `${yellow * 100}%`);
     const frame = (now) => {
-      const elapsed = now - t0;
-      const phase = (elapsed / period) % 1;
-      const pos = 1 - Math.abs(phase * 2 - 1);
-      const c = composure(elapsed);
-      const g = green * (1 + COMPOSURE_BONUS * c);
-      readout.current = { pos, green: g };
+      const { pos, green: g, calm: c } = sweep(now - t0, period, green);
       track.style.transform = `translateX(${pos * 100}%)`;
       if (c !== lastCalm) {
         lastCalm = c;
@@ -79,13 +101,26 @@ export function StrikeMeter({ ref, zone, difficulty, rating, calm, onStrike, onC
     return () => cancelAnimationFrame(raf);
   }, [green, yellow, period]);
 
-  const strike = () => {
-    const { pos, green: g } = readout.current;
+  const strikeAt = (time) => {
+    const { pos, green: g } = sweep(Math.max(0, time - startedAt.current), period, green);
     onStrike(gradeStrike(pos, g, yellow));
   };
 
+  // Touch, pen or mouse: strike as the press lands.
+  const onPress = (e) => {
+    if (e.button !== 0) return;
+    pressedAt.current = performance.now();
+    swallowNextClick();
+    strikeAt(eventTime(e));
+  };
+
+  // Keyboard and assistive-technology activation arrives as a click with no press before it.
+  const onActivate = (e) => {
+    if (performance.now() - pressedAt.current > 700) strikeAt(eventTime(e));
+  };
+
   // Lets the match screen trigger the same strike from its keyboard shortcut.
-  useImperativeHandle(ref, () => ({ strike }));
+  useImperativeHandle(ref, () => ({ strike: (e) => strikeAt(eventTime(e)) }));
 
   return (
     <div className="meter">
@@ -101,7 +136,7 @@ export function StrikeMeter({ ref, zone, difficulty, rating, calm, onStrike, onC
         </div>
       </div>
       <div className="meter__actions">
-        <Button variant="primary" size="xl" kbd="Space" onClick={strike} sound={null} className="meter__strike">
+        <Button variant="primary" size="xl" kbd="Space" onPointerDown={onPress} onClick={onActivate} sound={null} className="meter__strike">
           Strike
         </Button>
         <Button variant="ghost" kbd="Esc" onClick={onCancel} sound="back">
