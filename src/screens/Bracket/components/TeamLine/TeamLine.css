@@ -1,0 +1,51 @@
+.bm__team {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  min-height: 36px;
+  padding: 6px 8px 6px 12px;
+  font-size: 0.97rem;
+}
+
+.bm__team + .bm__team {
+  border-top: 2px dashed color-mix(in srgb, var(--ink) 20%, transparent);
+}
+
+.bm__team.is-winner .bm__name {
+  font-weight: 700;
+}
+
+.bm__team.is-me .bm__name::after {
+  content: ' (you)';
+  font-weight: 400;
+  opacity: 0.75;
+}
+
+.bm__name {
+  min-width: 0;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.bm__score {
+  margin-left: auto;
+  font: 400 0.72rem var(--font-display);
+}
+
+.bm__team.is-tbd {
+  opacity: 0.55;
+  font-style: italic;
+}
+
+.bm__flag--empty {
+  display: inline-block;
+  width: 27px;
+  height: 18px;
+  background: color-mix(in srgb, var(--ink) 20%, transparent);
+}
+
+.bm__team.is-slot .bm__name {
+  font-style: normal;
+  font-weight: 700;
+}

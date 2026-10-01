@@ -1,0 +1,14 @@
+.champ {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 6px;
+  font-weight: 700;
+  font-size: 0.97rem;
+}
+
+.champ__team {
+  display: inline-flex;
+  align-items: center;
+  gap: 5px;
+}

@@ -1,0 +1,25 @@
+.edition-summary {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: 12px 20px;
+  margin: 3px 3px 12px;
+  padding: 14px 16px;
+}
+
+.edition-summary p {
+  margin: 0 0 4px;
+}
+
+.edition-summary__name {
+  font: 400 1rem/1.4 var(--font-display);
+}
+
+.edition-summary__note {
+  max-width: 60ch;
+}
+
+.edition-summary__format {
+  font-weight: 700;
+}

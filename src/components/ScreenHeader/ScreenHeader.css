@@ -1,0 +1,6 @@
+.setup__head {
+  display: flex;
+  align-items: flex-start;
+  gap: 14px;
+  margin: 6px 0 18px;
+}

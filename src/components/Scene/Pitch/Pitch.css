@@ -1,0 +1,17 @@
+.sc-grass-a {
+  fill: var(--grass-a);
+}
+
+.sc-grass-b {
+  fill: var(--grass-b);
+}
+
+.sc-chalk {
+  fill: var(--chalk);
+}
+
+.sc-lines {
+  fill: none;
+  stroke: var(--chalk);
+  stroke-width: 1;
+}

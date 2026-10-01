@@ -1,0 +1,12 @@
+.hosts {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 5px;
+}
+
+.hosts__note,
+.hosts__more {
+  font-size: 0.92rem;
+  color: var(--ink-2);
+}

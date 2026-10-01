@@ -1,0 +1,44 @@
+.stepper {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 6px 16px;
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+
+.stepper li {
+  opacity: 0.55;
+}
+
+.stepper li.is-done {
+  opacity: 0.85;
+}
+
+.stepper li.is-current {
+  opacity: 1;
+  font-weight: 700;
+}
+
+.stepper__n {
+  display: inline-block;
+  padding: 3px 5px 2px;
+  background: var(--ink);
+  color: var(--panel);
+  font: 400 0.58rem/1 var(--font-display);
+  vertical-align: 0.15em;
+}
+
+.card-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(min(100%, 280px), 1fr));
+  gap: 14px;
+}
+
+.card-grid--editions {
+  grid-template-columns: repeat(auto-fill, minmax(min(100%, 200px), 1fr));
+}
+
+.group {
+  scroll-margin-top: 12px;
+}

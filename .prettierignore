@@ -1,0 +1,4 @@
+# Hand-aligned tables: one record per line reads better than Prettier's layout.
+src/data/competitions/formats.ts
+src/data/competitions/registry.ts
+src/pixel/flags/specs.ts

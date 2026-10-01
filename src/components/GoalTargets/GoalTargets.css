@@ -1,0 +1,82 @@
+/* The goal mouth, from scene units (--x, --y, --w, --h) set by <GoalTargets>. Without container
+   queries the whole 320×180 view is shown, so plain percentages line up. */
+.goal-targets {
+  position: absolute;
+  display: grid;
+  left: calc(var(--x) / 320 * 100%);
+  top: calc(var(--y) / 180 * 100%);
+  width: calc(var(--w) / 320 * 100%);
+  height: calc(var(--h) / 180 * 100%);
+}
+
+@supports (container-type: size) {
+  /* The SVG covers the scene box (preserveAspectRatio "xMidYMax slice"): --u is the size of one
+     scene unit in pixels, centred horizontally and anchored to the bottom edge. */
+  .goal-targets {
+    --u: max(100cqw / 320, 100cqh / 180);
+    left: calc(50% + (var(--x) - 160) * var(--u));
+    top: calc(100% - (180 - var(--y)) * var(--u));
+    width: calc(var(--w) * var(--u));
+    height: calc(var(--h) * var(--u));
+  }
+}
+
+.goal-targets--aim {
+  grid-template-columns: repeat(3, 1fr);
+  grid-template-rows: repeat(2, 1fr);
+}
+
+.goal-targets--dive {
+  grid-template-columns: repeat(3, 1fr);
+}
+
+.goal-targets__cell {
+  position: relative;
+  display: grid;
+  place-items: center;
+  padding: 0;
+  border: 0;
+  background: transparent;
+  cursor: pointer;
+}
+
+.goal-targets__cell:hover,
+.goal-targets__cell.is-hot {
+  background: rgba(255, 210, 63, 0.3);
+  outline: 2px dashed var(--accent);
+  outline-offset: -3px;
+}
+
+.goal-targets__cell.is-habit {
+  background: rgba(255, 90, 80, 0.2);
+}
+
+.goal-targets__reticle {
+  width: 30%;
+  aspect-ratio: 1;
+  max-width: 22px;
+  border: 3px solid rgba(255, 255, 255, 0.75);
+  opacity: 0;
+}
+
+.goal-targets__cell:hover .goal-targets__reticle,
+.goal-targets__cell.is-hot .goal-targets__reticle {
+  opacity: 1;
+}
+
+.goal-targets__arrow {
+  display: grid;
+  width: clamp(14px, 24%, 30px);
+  color: #ffffff;
+  opacity: 0.55;
+  filter: drop-shadow(2px 2px 0 rgba(0, 0, 0, 0.5));
+}
+
+/* The middle target covers the keeper, so its icon only shows on hover rather than as a shirt print. */
+.goal-targets--dive .goal-targets__cell:nth-child(2) .goal-targets__arrow {
+  opacity: 0;
+}
+
+.goal-targets--dive .goal-targets__cell:hover .goal-targets__arrow {
+  opacity: 1;
+}

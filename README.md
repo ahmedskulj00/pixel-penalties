@@ -10,28 +10,53 @@ Vietnam) and 31 competitions with 462 editions, from the 1916 South American Cha
 
     npm install
     npm run dev          # Vite dev server with hot reload
-    npm run build        # → dist/index.html, one self-contained file (JS and CSS inlined)
+    npm run build        # type-check, then → dist/index.html, one self-contained file (JS and CSS inlined)
     npm run build:debug  # unminified, with React's development checks → dist-debug/index.html
     npm run preview      # serve the production build locally
-    npm test             # data integrity, title counts, shootout rules, every edition played to a finish
+    npm test             # Vitest: data integrity, title counts, shootout rules, every edition played to a finish
+    npm run typecheck    # strict TypeScript for the app, the tests and the Vite config
+    npm run format       # Prettier (format:check only checks)
+    npm run sheet        # every flag and sprite pose on one page → dist/sheet.html
 
-Node 22.12 or later is required (Vite 8 and the test runner's file globs need it).
+Node 22.12 or later is required (Vite 8 and Vitest need it).
 
 ## Structure
 
-    src/data/nations.js       teams: kits, era names (Zaire, Burma, Ceylon…), confederation membership by year, bans
-    src/data/editions/*.js    every edition per confederation: hosts, line-ups, real groups, seeds, winners, notes
-    src/data/competitions.js  the registry: regions, eligibility rules, and the format each edition used
-    src/engine/               seeded RNG, the spot-kick model and shootout rules, group stages and knockout brackets
+React 19 and TypeScript in strict mode, built with Vite. Imports use the `@/` alias for `src/`.
+
+    src/main.tsx              entry point: the global styles, then the app
+    src/app/                  the app shell (top bar, screen routing, pop-ups) and the route types
+    src/screens/              one folder per screen: Home, QuickSetup, TournamentSetup, Bracket, Match, Cabinet;
+                              parts that only one screen uses live in that screen's folder
+    src/modals/               the Settings, How to play and Pause pop-ups
+    src/components/           shared components: buttons, modal, flags and sprites, the scene and its
+                              choreography (Web Animations API), the aim, strike and dive controls, pickers
+    src/styles/               only what is global: colour tokens and themes, the page reset, shared helper classes
+    src/types/                shared types: nations, competitions and editions, tournaments, the shootout, settings
+    src/utils/                small pure helpers: seeded random numbers, hashing, maths, formatting, colours,
+                              search text, timers, pointer input
+    src/data/nations.ts       teams: kits, era names (Zaire, Burma, Ceylon…), confederation membership by year, bans
+    src/data/editions/        every edition per confederation: hosts, line-ups, real groups, seeds, winners, notes
+    src/data/competitions/    the registry: regions, eligibility rules, and the format each edition used
+    src/engine/               the spot-kick model, computer players, shootout rules, group stages and knockout brackets
     src/pixel/                sprite and flag painters (run-length encoded into SVG paths, cached)
     src/audio/                Web Audio synth effects and haptics
     src/state/                localStorage-backed stores read with useSyncExternalStore
-    src/components/           scene, choreography (Web Animations API), controls, pickers
-    src/screens/              home, setup wizard, quick shootout, tournament hub (groups and bracket), match, cabinet
+    src/hooks/                keyboard shortcuts, reduced motion, animation timing
+    tests/                    Vitest suites for the data, the shootout rules and the tournament engine
     scripts/qa.py             Playwright run-through with screenshots (QA_FILE=dist-debug/index.html for the debug build)
-    vite.config.js            Vite 8 with @vitejs/plugin-react; vite-plugin-singlefile inlines the bundle
-    scripts/replay-history.mjs  rebuilds the git history from the project's milestones (see --help)
+    scripts/sheet.ts          renders every flag and sprite pose to dist/sheet.html
+    vite.config.ts            Vite 8 with @vitejs/plugin-react; vite-plugin-singlefile inlines the bundle
+    tsconfig*.json            the app, the tests and scripts (with Node types), and the Vite config, each checked separately
     .github/workflows/        CI (tests and build on every push) and an on-demand GitHub Pages deploy
+
+Every component has its own folder, with its styles next to it:
+
+    src/components/Scoreboard/
+      Scoreboard.tsx          the component; it imports './Scoreboard.css' after its other imports
+      Scoreboard.css          the rules for the elements it renders
+      ScoreboardSide/         a part that only the scoreboard uses, laid out the same way
+      index.ts                what the rest of the code imports: import { Scoreboard } from '@/components/Scoreboard'
 
 ## Competitions
 
@@ -62,7 +87,7 @@ from any era enter anything.
 ## Tournament formats
 
 Every edition is played in the format its final tournament actually used (`formatOf` in
-`src/data/competitions.js`):
+`src/data/competitions/formats.ts`):
 
 - **Group stage, then knockouts.** Each group match is a shootout worth 3 points. Ties are
   broken by head-to-head, penalty difference, penalties scored, then seeding. Qualification

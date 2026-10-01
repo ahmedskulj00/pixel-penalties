@@ -1,0 +1,12 @@
+.confirm {
+  display: grid;
+  gap: 8px;
+  padding: 12px 14px;
+  background: var(--chip);
+  box-shadow: inset 5px 0 0 0 var(--bad);
+}
+
+.confirm__text {
+  margin: 0;
+  font-weight: 700;
+}

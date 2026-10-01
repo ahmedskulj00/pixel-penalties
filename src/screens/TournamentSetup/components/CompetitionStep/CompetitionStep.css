@@ -1,0 +1,9 @@
+.comp-card {
+  display: flex;
+  gap: 14px;
+  align-items: flex-start;
+}
+
+.comp-card__trophy {
+  flex: none;
+}

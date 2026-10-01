@@ -1,0 +1,25 @@
+.setting {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 16px;
+  padding: 12px 0;
+  border-bottom: 2px dashed color-mix(in srgb, var(--ink) 18%, transparent);
+}
+
+.setting--stack {
+  flex-direction: column;
+  align-items: stretch;
+  gap: 8px;
+}
+
+.setting__label {
+  display: block;
+  font-weight: 700;
+}
+
+.setting__desc {
+  display: block;
+  font-size: 0.93rem;
+  color: var(--ink-2);
+}

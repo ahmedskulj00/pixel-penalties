@@ -1,0 +1,17 @@
+.badge {
+  display: inline-block;
+  padding: 4px 7px 3px;
+  background: var(--chip);
+  color: var(--ink);
+  font: 700 0.82rem/1 var(--font-ui);
+}
+
+.badge--new {
+  background: var(--accent);
+  color: var(--accent-ink);
+}
+
+.badge--warn {
+  background: var(--warn);
+  color: #1d1400;
+}

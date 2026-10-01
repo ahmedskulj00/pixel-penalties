@@ -1,0 +1,116 @@
+import type { Edition } from '@/types';
+import { ed, upcoming, grouped } from './helpers';
+
+/** Africa Cup of Nations: real groups for the classic two-group era and since 2012. */
+export const AFCON: Edition[] = [
+  ed(1957, 'SDN', 'EGY ETH SDN', { note: 'The first Cup of Nations: three teams after South Africa were excluded.' }),
+  ed(1959, 'EGY', 'EGY SDN ETH', { note: 'Egypt played as the United Arab Republic.' }),
+  ed(1962, 'ETH', 'ETH EGY TUN UGA'),
+  grouped(1963, 'GHA', 'GHA SDN EGY ETH', ['GHA ETH TUN', 'SDN EGY NGA']),
+  grouped(1965, 'TUN', 'GHA TUN CIV SEN', ['TUN SEN ETH', 'GHA CIV COD']),
+  grouped(1968, 'ETH', 'COD GHA CIV ETH', ['ETH CIV ALG UGA', 'GHA COD SEN CGO']),
+  grouped(1970, 'SDN', 'SDN GHA EGY CIV', ['CIV SDN CMR ETH', 'EGY GHA GUI COD']),
+  grouped(1972, 'CMR', 'CGO MLI CMR COD', ['CMR MLI KEN TOG', 'COD CGO MAR SDN']),
+  grouped(1974, 'EGY', 'COD ZAM EGY CGO', ['EGY ZAM UGA CIV', 'CGO COD GUI MRI'], { note: 'Zaire won a replayed final against Zambia.' }),
+  grouped(1976, 'ETH', 'MAR GUI NGA EGY', ['GUI EGY ETH UGA', 'MAR NGA SDN COD'], {
+    note: 'No final: a four-team final round decided the title.',
+  }),
+  grouped(1978, 'GHA', 'GHA UGA NGA TUN', ['GHA NGA ZAM BFA', 'UGA TUN MAR CGO']),
+  grouped(1980, 'NGA', 'NGA ALG MAR EGY', ['NGA EGY CIV TAN', 'ALG MAR GHA GUI']),
+  grouped(1982, 'LBY', 'GHA LBY ZAM ALG', ['LBY GHA CMR TUN', 'ALG ZAM NGA ETH'], { note: 'Ghana beat Libya on penalties in the final.' }),
+  grouped(1984, 'CIV', 'CMR NGA ALG EGY', ['EGY CMR CIV TOG', 'ALG NGA GHA MWI']),
+  grouped(1986, 'EGY', 'EGY CMR CIV MAR', ['EGY CIV SEN MOZ', 'CMR MAR ALG ZAM'], { note: 'Egypt beat Cameroon on penalties in the final.' }),
+  grouped(1988, 'MAR', 'CMR NGA ALG MAR', ['MAR ALG CIV COD', 'NGA CMR EGY KEN']),
+  grouped(1990, 'ALG', 'ALG NGA ZAM SEN', ['ALG NGA CIV EGY', 'SEN ZAM CMR KEN']),
+  grouped(1992, 'SEN', 'CIV GHA NGA CMR', ['NGA SEN KEN', 'CMR COD MAR', 'CIV CGO ALG', 'GHA ZAM EGY'], {
+    note: 'Ivory Coast won the final 11–10 on penalties.',
+  }),
+  grouped(1994, 'TUN', 'NGA ZAM CIV MLI', ['MLI COD TUN', 'NGA EGY GAB', 'ZAM CIV SLE', 'GHA SEN GUI']),
+  grouped(1996, 'RSA', 'RSA TUN ZAM GHA', ['RSA EGY CMR ANG', 'ZAM ALG SLE BFA', 'GAB COD LBR', 'GHA TUN CIV MOZ']),
+  ed(1998, 'BFA', 'EGY RSA COD BFA CMR TUN MAR ZAM GHA CIV ALG NAM ANG GUI MOZ TOG'),
+  ed(2000, 'GHA NGA', 'CMR NGA RSA TUN GHA SEN EGY ZAM MAR CIV ALG COD CGO GAB BFA TOG', { note: 'Cameroon won the final on penalties.' }),
+  ed(2002, 'MLI', 'CMR SEN NGA MLI EGY RSA TUN ZAM GHA COD ALG CIV MAR BFA TOG LBR', { note: 'Cameroon won the final on penalties.' }),
+  ed(2004, 'TUN', 'TUN MAR NGA MLI CMR SEN GUI ALG RSA BEN EGY ZIM RWA COD KEN BFA'),
+  ed(2006, 'EGY', 'EGY CIV NGA SEN CMR GUI COD GHA MAR ANG LBY RSA ZAM TUN TOG ZIM', { note: 'Egypt won the final on penalties.' }),
+  ed(2008, 'GHA', 'EGY CMR GHA CIV TUN GUI NGA ANG SEN MAR ZAM MLI BEN RSA SDN NAM'),
+  ed(2010, 'ANG', 'EGY GHA NGA ALG ANG CMR CIV ZAM MLI TUN GAB BFA MWI BEN MOZ', { note: 'Togo withdrew, so fifteen teams took part.' }),
+  grouped(2012, 'GAB EQG', 'ZAM CIV MLI GHA', ['ZAM EQG LBY SEN', 'CIV SDN ANG BFA', 'GAB TUN MAR NIG', 'GHA MLI GUI BOT'], {
+    note: 'Zambia won the final 8–7 on penalties.',
+  }),
+  grouped(2013, 'RSA', 'NGA BFA MLI GHA', ['RSA CPV MAR ANG', 'GHA MLI COD NIG', 'BFA NGA ZAM ETH', 'CIV TOG TUN ALG']),
+  grouped(2015, 'EQG', 'CIV GHA COD EQG', ['CGO EQG GAB BFA', 'TUN COD CPV ZAM', 'GHA ALG SEN RSA', 'CIV GUI MLI CMR'], {
+    note: 'Ivory Coast won the final 9–8 on penalties.',
+  }),
+  grouped(2017, 'GAB', 'CMR EGY BFA GHA', ['BFA CMR GAB GNB', 'SEN TUN ALG ZIM', 'COD MAR CIV TOG', 'EGY GHA MLI UGA']),
+  grouped(2019, 'EGY', 'ALG SEN NGA TUN', ['EGY UGA COD ZIM', 'MAD NGA GUI BDI', 'ALG SEN KEN TAN', 'MAR CIV RSA NAM', 'MLI TUN MTN ANG', 'GHA CMR BEN GNB']),
+  grouped(2021, 'CMR', 'SEN EGY CMR BFA', ['CMR BFA CPV ETH', 'SEN GUI MWI ZIM', 'MAR GAB COM GHA', 'NGA EGY SDN GNB', 'CIV EQG SLE ALG', 'MLI GAM TUN MTN'], {
+    note: 'Played in early 2022. Senegal beat Egypt on penalties in the final.',
+  }),
+  grouped(2023, 'CIV', 'CIV NGA RSA COD', ['EQG NGA CIV GNB', 'CPV EGY GHA MOZ', 'SEN GUI CMR GAM', 'ANG BFA MTN ALG', 'MLI RSA NAM TUN', 'MAR COD ZAM TAN'], {
+    note: 'Played in early 2024.',
+  }),
+  grouped(2025, 'MAR', 'MAR SEN NGA EGY', ['MAR MLI ZAM COM', 'EGY RSA ANG ZIM', 'NGA TUN UGA TAN', 'SEN COD BEN BOT', 'ALG BFA EQG SDN', 'CIV CMR GAB MOZ'], {
+    note: 'Senegal won the final 1–0 after extra time, but CAF later awarded the title to Morocco on appeal.',
+  }),
+  upcoming(2027, 'KEN TAN UGA'),
+];
+
+export const WAFCON: Edition[] = [
+  ed(1991, null, 'NGA CMR', { hostNote: 'Home and away', note: 'The first African Women’s Championship.' }),
+  ed(1995, null, 'NGA RSA', { hostNote: 'Home and away' }),
+  ed(1998, 'NGA', 'NGA GHA'),
+  ed(2000, 'RSA', 'NGA RSA'),
+  ed(2002, 'NGA', 'NGA GHA'),
+  ed(2004, 'RSA', 'NGA CMR'),
+  ed(2006, 'NGA', 'NGA GHA'),
+  ed(2008, 'EQG', 'EQG RSA'),
+  ed(2010, 'RSA', 'NGA EQG'),
+  ed(2012, 'EQG', 'EQG RSA'),
+  ed(2014, 'NAM', 'NGA CMR'),
+  ed(2016, 'CMR', 'NGA CMR'),
+  ed(2018, 'GHA', 'NGA RSA', { note: 'Nigeria beat South Africa on penalties in the final.' }),
+  ed(2022, 'MAR', 'RSA MAR ZAM NGA'),
+  ed(2024, 'MAR', 'NGA MAR', { note: 'Played in 2025. Nigeria came from 2–0 down to win the final 3–2.' }),
+  grouped(2026, 'MAR', 'CMR MWI MAR', ['MAR ALG SEN KEN', 'RSA CIV BFA TAN', 'NGA ZAM EGY MWI', 'GHA CMR MLI CPV'], {
+    note: 'Sixteen teams for the first time. Cameroon won their first title.',
+  }),
+];
+
+/** African Nations Championship: national teams of players from their home leagues. */
+export const CHAN: Edition[] = [
+  ed(2009, 'CIV', 'COD GHA ZAM SEN', { note: 'The first African Nations Championship.' }),
+  ed(2011, 'SDN', 'TUN ANG SDN ALG'),
+  ed(2014, 'RSA', 'LBY GHA NGA ZIM', { note: 'Libya beat Ghana on penalties in the final.' }),
+  ed(2016, 'RWA', 'COD MLI CIV GUI'),
+  ed(2018, 'MAR', 'MAR NGA SDN LBY'),
+  ed(2020, 'CMR', 'MAR MLI GUI CMR', { note: 'Played in 2021.' }),
+  ed(2022, 'ALG', 'SEN ALG MAD NIG', { note: 'Played in 2023. Senegal won the final on penalties.' }),
+  ed(2024, 'KEN TAN UGA', 'MAR MAD SEN SDN', { note: 'Played in 2025.' }),
+];
+
+export const COSAFA: Edition[] = [
+  ed(1997, null, 'ZAM NAM MOZ TAN', { hostNote: 'Home and away', note: 'The first COSAFA Cup, with Tanzania as guests.' }),
+  ed(1998, null, 'ZAM ZIM', { hostNote: 'Home and away' }),
+  ed(1999, null, 'ANG NAM', { hostNote: 'Home and away' }),
+  ed(2000, null, 'ZIM LES', { hostNote: 'Home and away' }),
+  ed(2001, null, 'ANG ZIM', { hostNote: 'Home and away' }),
+  ed(2002, null, 'RSA MWI', { hostNote: 'Home and away' }),
+  ed(2003, null, 'ZIM MWI', { hostNote: 'Home and away' }),
+  ed(2004, null, 'ANG ZAM', { hostNote: 'Home and away' }),
+  ed(2005, null, 'ZIM ZAM', { hostNote: 'Home and away' }),
+  ed(2006, null, 'ZAM ANG', { hostNote: 'Home and away' }),
+  ed(2007, null, 'RSA ZAM', { hostNote: 'Home and away' }),
+  ed(2008, 'RSA', 'RSA MOZ'),
+  ed(2009, 'ZIM', 'ZIM ZAM'),
+  ed(2013, 'ZAM', 'ZAM ZIM'),
+  ed(2015, 'RSA', 'NAM MOZ'),
+  ed(2016, 'NAM', 'RSA BOT'),
+  ed(2017, 'RSA', 'ZIM ZAM'),
+  ed(2018, 'RSA', 'ZIM ZAM'),
+  ed(2019, 'RSA', 'ZAM BOT'),
+  ed(2021, 'RSA', 'RSA SEN', { note: 'Senegal played as guests.' }),
+  ed(2022, 'RSA', 'ZAM NAM SEN MOZ'),
+  ed(2023, 'RSA', 'ZAM LES RSA MWI'),
+  ed(2024, 'RSA', 'ANG NAM MOZ COM'),
+  grouped(2025, 'RSA', 'ANG RSA COM MAD', ['RSA ZIM MOZ MRI', 'ANG NAM LES MWI', 'MAD TAN SWZ', 'COM BOT ZAM']),
+];

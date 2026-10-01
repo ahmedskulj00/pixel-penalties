@@ -1,0 +1,61 @@
+.btn--secondary {
+  --b-bg: var(--panel-2);
+}
+
+@media (max-width: 600px) and (orientation: portrait), (orientation: landscape) and (max-height: 560px) {
+  .match .divepad__btn {
+    min-height: 58px;
+    gap: 5px;
+    padding: 9px 4px 10px;
+    font-size: 1rem;
+  }
+}
+
+@media (orientation: landscape) and (max-height: 560px) {
+  .match .divepad__btn {
+    min-height: 50px;
+    gap: 3px;
+    padding: 6px 3px 7px;
+    font-size: 0.88rem;
+  }
+}
+
+.divepad {
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: 6px;
+  width: min(100%, 580px);
+}
+
+/* Icon above a centred label, with the key pinned in the corner as on the aim pad, so every
+   button lines up whatever the label's length. */
+.divepad__btn {
+  position: relative;
+  display: grid;
+  justify-items: center;
+  align-content: center;
+  gap: 6px;
+  min-height: 66px;
+  padding: 12px 6px 13px;
+  font-size: 1.05rem;
+  line-height: 1.15;
+  text-align: center;
+}
+
+.divepad__label {
+  text-wrap: balance;
+}
+
+.divepad__key {
+  position: absolute;
+  top: 4px;
+  right: 4px;
+  opacity: 0.75;
+  font-size: 0.55rem;
+}
+
+@media (hover: none) and (pointer: coarse) {
+  .divepad__key {
+    display: none;
+  }
+}

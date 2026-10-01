@@ -1,0 +1,135 @@
+@media (max-width: 600px) and (orientation: portrait), (orientation: landscape) and (max-height: 560px) {
+  .match .meter {
+    gap: 8px;
+  }
+
+  .match .meter__bar {
+    margin: 4px 3px;
+  }
+
+  /* Strike and "Change spot" share one row, the big button taking most of it. */
+  .match .meter__actions {
+    flex-wrap: nowrap;
+    width: 100%;
+    gap: 8px;
+  }
+
+  .match .meter__strike {
+    flex: 1;
+    min-width: 0;
+  }
+}
+
+@media (orientation: landscape) and (max-height: 560px) {
+  .match .meter {
+    gap: 6px;
+  }
+
+  .match .meter__bar {
+    height: 32px;
+  }
+}
+
+.meter {
+  display: grid;
+  gap: 12px;
+  width: min(100%, 560px);
+}
+
+.meter__composure {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 10px;
+  font-size: 0.95rem;
+}
+
+.meter__calm {
+  position: relative;
+  width: 120px;
+  height: 10px;
+  overflow: hidden;
+  background: var(--panel-2);
+  box-shadow: 0 -2px 0 0 var(--line), 0 2px 0 0 var(--line), -2px 0 0 0 var(--line), 2px 0 0 0 var(--line);
+}
+
+.meter__calm-fill {
+  position: absolute;
+  inset: 0;
+  background: var(--save);
+  transform: scaleX(0);
+  transform-origin: left;
+}
+
+.meter__bar {
+  --g: 20%;
+  --y: 14%;
+  position: relative;
+  height: 40px;
+  margin: 10px 3px;
+  box-shadow: var(--frame);
+  background: linear-gradient(
+    90deg,
+    var(--bad) 0 calc(50% - var(--g) / 2 - var(--y)),
+    var(--warn) 0 calc(50% - var(--g) / 2),
+    var(--good) 0 calc(50% + var(--g) / 2),
+    var(--warn) 0 calc(50% + var(--g) / 2 + var(--y)),
+    var(--bad) 0
+  );
+}
+
+/* Hatching and hard edges make the sweet spot readable without colour. */
+.meter__bar::before {
+  content: '';
+  position: absolute;
+  top: 0;
+  bottom: 0;
+  left: calc(50% - var(--g) / 2);
+  width: var(--g);
+  border-inline: 3px solid var(--line);
+  background: repeating-linear-gradient(45deg, rgba(255, 255, 255, 0.28) 0 4px, transparent 4px 9px);
+}
+
+.meter__bar.is-composed::before {
+  box-shadow: inset 0 0 0 2px #ffffff;
+}
+
+.meter__track {
+  position: absolute;
+  inset: 0;
+  pointer-events: none;
+  will-change: transform;
+}
+
+.meter__marker {
+  position: absolute;
+  left: 0;
+  top: -10px;
+  bottom: -10px;
+  width: 6px;
+  background: var(--ink);
+  transform: translateX(-50%);
+  box-shadow: 0 0 0 2px var(--panel);
+}
+
+.meter__marker::before {
+  content: '';
+  position: absolute;
+  left: 50%;
+  top: -8px;
+  border: 7px solid transparent;
+  border-top-color: var(--ink);
+  transform: translateX(-50%);
+}
+
+.meter__actions {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  justify-content: center;
+  gap: 8px 14px;
+}
+
+.meter__strike {
+  min-width: 220px;
+}

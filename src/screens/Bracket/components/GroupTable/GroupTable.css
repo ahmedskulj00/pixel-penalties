@@ -1,0 +1,88 @@
+.gtable {
+  width: 100%;
+  border-collapse: collapse;
+  font-size: 0.97rem;
+  font-variant-numeric: tabular-nums;
+}
+
+.gtable th,
+.gtable td {
+  padding: 6px 4px;
+  text-align: center;
+}
+
+.gtable thead th {
+  white-space: nowrap;
+  border-bottom: 2px solid color-mix(in srgb, var(--ink) 30%, transparent);
+  color: var(--ink-2);
+  font-size: 0.82rem;
+  font-weight: 700;
+}
+
+.gtable abbr {
+  text-decoration: none;
+  cursor: help;
+}
+
+.gtable tbody tr + tr {
+  border-top: 1px dashed color-mix(in srgb, var(--ink) 18%, transparent);
+}
+
+.gtable__pos {
+  width: 30px;
+  border-left: 5px solid transparent;
+  font-weight: 700;
+}
+
+.is-in > .gtable__pos {
+  border-left-color: var(--good);
+}
+
+.is-maybe > .gtable__pos {
+  border-left-color: var(--warn);
+}
+
+.is-out > td,
+.is-out > th {
+  opacity: 0.55;
+}
+
+.gtable__team {
+  width: 100%;
+  max-width: 0;
+  text-align: left !important;
+  font-weight: 400;
+}
+
+.gtable__who {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  min-width: 0;
+}
+
+.gtable__name {
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.gtable tr.is-me {
+  background: color-mix(in srgb, var(--accent) 24%, transparent);
+}
+
+.gtable tr.is-me .gtable__name {
+  font-weight: 700;
+}
+
+.gtable__pts {
+  font-weight: 700;
+}
+
+.gtable td {
+  font-family: var(--font-digits);
+}
+
+.is-down > .gtable__pos {
+  border-left-color: var(--bad);
+}

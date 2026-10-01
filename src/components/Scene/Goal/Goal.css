@@ -1,0 +1,11 @@
+.sc-goal-depth {
+  fill: var(--goal-depth);
+}
+
+.sc-post {
+  fill: var(--post);
+}
+
+.sc-post-shade {
+  fill: var(--post-shade);
+}

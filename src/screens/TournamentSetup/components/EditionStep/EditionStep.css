@@ -1,0 +1,43 @@
+.ed-card {
+  display: grid;
+  align-content: start;
+  gap: 8px;
+}
+
+.ed-card--upcoming {
+  box-shadow: var(--frame), inset 0 -4px 0 0 var(--panel-shade), inset 6px 0 0 0 var(--accent);
+}
+
+.ed-card__year {
+  font: 400 1rem/1.25 var(--font-display);
+}
+
+.ed-card__era {
+  font-size: 0.9rem;
+  color: var(--ink-2);
+}
+
+.decades {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 6px;
+  margin: 4px 0;
+}
+
+.chip {
+  display: inline-block;
+  min-height: 36px;
+  margin: 3px;
+  padding: 9px 10px 8px;
+  border: 0;
+  background: var(--panel);
+  color: var(--ink);
+  font: 400 0.62rem/1 var(--font-display);
+  cursor: pointer;
+  box-shadow: var(--frame);
+}
+
+.ed-card__format {
+  font-size: 0.88rem;
+  color: var(--ink-2);
+}

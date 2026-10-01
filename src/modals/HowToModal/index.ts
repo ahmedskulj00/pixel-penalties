@@ -1,0 +1,1 @@
+export { HowToModal } from './HowToModal';

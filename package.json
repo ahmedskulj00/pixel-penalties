@@ -3,24 +3,35 @@
   "version": "1.0.0",
   "private": true,
   "type": "module",
-  "description": "Pixel-art penalty shootouts for every national team and international tournament. React 19 + Vite.",
+  "description": "Pixel-art penalty shootouts for every national team and international tournament. React 19 + TypeScript + Vite.",
   "engines": {
     "node": ">=22.12"
   },
   "scripts": {
     "dev": "vite",
-    "build": "vite build",
+    "build": "npm run typecheck && vite build",
     "build:debug": "vite build --mode development",
     "preview": "vite preview",
-    "test": "node --test \"tests/*.test.mjs\""
+    "typecheck": "tsc -p tsconfig.json && tsc -p tsconfig.test.json && tsc -p tsconfig.node.json",
+    "test": "vitest run",
+    "format": "prettier --write \"src/**/*.{ts,tsx}\" \"tests/**/*.ts\" \"scripts/**/*.ts\" vite.config.ts",
+    "format:check": "prettier --check \"src/**/*.{ts,tsx}\" \"tests/**/*.ts\" \"scripts/**/*.ts\" vite.config.ts",
+    "sheet": "tsx scripts/sheet.ts"
   },
   "dependencies": {
     "react": "19.3.0",
     "react-dom": "19.3.0"
   },
   "devDependencies": {
+    "@types/node": "^22.20.4",
+    "@types/react": "^19.3.0",
+    "@types/react-dom": "^19.3.0",
     "@vitejs/plugin-react": "^6.1.1",
+    "prettier": "^3.9.9",
+    "tsx": "^4.23.15",
+    "typescript": "^7.0.2",
     "vite": "^8.3.1",
-    "vite-plugin-singlefile": "^2.3.3"
+    "vite-plugin-singlefile": "^2.3.3",
+    "vitest": "^5.0.3"
   }
 }

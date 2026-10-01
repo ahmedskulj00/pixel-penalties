@@ -1,0 +1,11 @@
+.panel__row {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 10px;
+}
+
+.panel__row--wrap {
+  flex-wrap: wrap;
+  justify-content: flex-start;
+}

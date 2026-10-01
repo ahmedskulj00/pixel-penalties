@@ -1,0 +1,39 @@
+.slot {
+  display: grid;
+  gap: 8px;
+  min-height: 96px;
+  margin: 3px;
+  padding: 12px 14px;
+  border: 0;
+  background: var(--panel);
+  color: var(--ink);
+  text-align: left;
+  cursor: pointer;
+  box-shadow: var(--frame), inset 0 -4px 0 0 var(--panel-shade);
+}
+
+.slot.is-active {
+  background: var(--accent);
+  color: var(--accent-ink);
+  box-shadow: var(--frame), inset 0 -4px 0 0 var(--accent-2);
+}
+
+.slot__label {
+  font: 400 0.6rem/1 var(--font-display);
+}
+
+.slot__pick {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+}
+
+.slot__name {
+  font-weight: 700;
+  font-size: 1.1rem;
+  line-height: 1.2;
+}
+
+.slot__empty {
+  opacity: 0.7;
+}

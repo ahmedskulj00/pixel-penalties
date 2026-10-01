@@ -1,0 +1,19 @@
+.stars {
+  display: block;
+  width: 58px;
+  height: 10px;
+  margin-top: 4px;
+}
+
+.stars__on {
+  fill: var(--star);
+}
+
+.stars__off {
+  fill: currentColor;
+  opacity: 0.22;
+}
+
+.nation.is-selected .stars__on {
+  fill: var(--accent-ink);
+}

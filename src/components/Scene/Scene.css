@@ -1,0 +1,86 @@
+.home__stage .scene {
+  width: 100%;
+}
+
+.scene {
+  position: relative;
+  aspect-ratio: 16 / 9;
+  background: var(--sc-stand);
+  box-shadow: var(--frame);
+  overflow: hidden;
+  touch-action: manipulation;
+  user-select: none;
+  -webkit-user-select: none;
+}
+
+.scene__svg {
+  display: block;
+  width: 100%;
+  height: 100%;
+}
+
+.sc-stand {
+  fill: var(--sc-stand);
+}
+
+.sc-board {
+  fill: var(--sc-board);
+}
+
+.sc-board-text {
+  fill: var(--sc-board-ink);
+  font: 400 4.6px var(--font-display);
+}
+
+.sc-net-line {
+  fill: var(--net);
+}
+
+.sc-shadow {
+  fill: rgba(0, 0, 0, 0.3);
+}
+
+.sc-crowd {
+  transition: opacity 0.3s;
+}
+
+.scene--focus .sc-crowd {
+  opacity: 0.2;
+}
+
+@supports (container-type: size) {
+  .scene {
+    container-type: size;
+  }
+}
+
+.match > .scene {
+  width: var(--scene-w);
+}
+
+@media (min-width: 900px), (orientation: landscape) and (max-height: 560px) {
+  .match > .scene {
+    grid-area: scene;
+    justify-self: center;
+  }
+}
+
+@supports (container-type: size) {
+  @media (max-width: 600px) and (orientation: portrait) {
+    .match > .scene {
+      aspect-ratio: auto;
+      /* Between the classic 16:9 and nearly square; 66px is the scoreboard and the gap below it. */
+      height: clamp(56.25cqw, calc(100cqh - 66px - var(--panel-room)), 96cqw);
+      box-shadow: none;
+    }
+  }
+
+  @media (orientation: landscape) and (max-height: 560px) {
+    .match > .scene {
+      grid-area: scene;
+      aspect-ratio: auto;
+      width: min(100cqh * 16 / 9, 100cqw - 248px);
+      height: 100cqh;
+    }
+  }
+}

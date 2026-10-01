@@ -1,0 +1,9 @@
+.bm {
+  margin: 3px;
+  background: var(--panel);
+  box-shadow: var(--frame);
+}
+
+.bm--mine {
+  box-shadow: var(--frame), inset 5px 0 0 0 var(--accent);
+}

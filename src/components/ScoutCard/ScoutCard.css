@@ -1,0 +1,48 @@
+@media (orientation: landscape) and (max-height: 560px) {
+  .match .scout {
+    gap: 8px;
+    font-size: 0.88rem;
+    line-height: 1.35;
+  }
+
+  .match .scout__goal {
+    grid-template-columns: repeat(3, 12px);
+    grid-template-rows: repeat(2, 9px);
+  }
+}
+
+.scout {
+  display: flex;
+  align-items: center;
+  gap: 14px;
+  max-width: 460px;
+  margin: 0;
+  text-align: left;
+}
+
+.scout--off {
+  color: var(--ink-2);
+}
+
+.scout__goal {
+  display: grid;
+  flex: none;
+  grid-template-columns: repeat(3, 18px);
+  grid-template-rows: repeat(2, 14px);
+  gap: 2px;
+  padding: 4px;
+  background: var(--sc-board);
+  box-shadow: 0 0 0 2px #ffffff;
+}
+
+.scout__cell {
+  background: rgba(255, 255, 255, 0.16);
+}
+
+.scout__cell.is-fav {
+  background: var(--sc-board-ink);
+}
+
+.scout__text {
+  margin: 0;
+}

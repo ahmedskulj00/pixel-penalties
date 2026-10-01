@@ -1,0 +1,65 @@
+.match > .scoreboard {
+  width: var(--scene-w);
+}
+
+@media (min-width: 900px), (orientation: landscape) and (max-height: 560px) {
+  .match > .scoreboard {
+    grid-area: board;
+    width: 100%;
+  }
+}
+
+@media (orientation: landscape) and (max-height: 560px) {
+  .scoreboard {
+    padding-block: 6px;
+  }
+}
+
+@supports (container-type: size) {
+  @media (max-width: 600px) and (orientation: portrait) {
+    .match > .scoreboard {
+      padding: 6px 12px 7px;
+    }
+  }
+
+  @media (orientation: landscape) and (max-height: 560px) {
+    .match > .scoreboard {
+      grid-area: board;
+      width: 100%;
+      padding: 6px 10px;
+    }
+  }
+}
+
+.scoreboard {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) auto minmax(0, 1fr);
+  align-items: center;
+  gap: 10px;
+  padding: 10px 14px;
+  background: var(--sc-board);
+  color: #ffffff;
+}
+
+.scoreboard__mid {
+  display: grid;
+  justify-items: center;
+  gap: 4px;
+}
+
+.scoreboard__stage {
+  font-size: 0.85rem;
+  opacity: 0.8;
+  white-space: nowrap;
+}
+
+.scoreboard__score {
+  color: var(--sc-board-ink);
+  font: 400 clamp(1.3rem, 4.6vw, 2.1rem) / 1 var(--font-display);
+  white-space: nowrap;
+}
+
+.scoreboard__dash {
+  margin: 0 0.25em;
+  opacity: 0.7;
+}

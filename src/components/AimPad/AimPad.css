@@ -1,0 +1,92 @@
+@media (min-width: 900px), (orientation: landscape) and (max-height: 560px) {
+  .aimpad__zone {
+    min-height: 72px;
+  }
+}
+
+@media (max-width: 600px) and (orientation: portrait), (orientation: landscape) and (max-height: 560px) {
+  .match .aimpad {
+    gap: 4px;
+  }
+
+  .match .aimpad__zone {
+    min-height: 56px;
+    padding: 17px 4px 8px;
+    font-size: 0.95rem;
+  }
+}
+
+@media (orientation: landscape) and (max-height: 560px) {
+  .match .aimpad__zone {
+    min-height: 50px;
+    padding: 15px 2px 6px;
+    font-size: 0.86rem;
+    letter-spacing: -0.01em;
+  }
+}
+
+.aimpad {
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: 8px;
+  width: min(100%, 540px);
+}
+
+.aimpad__zone {
+  position: relative;
+  display: grid;
+  place-items: center;
+  gap: 6px;
+  min-height: 66px;
+  margin: 3px;
+  padding: 22px 6px 10px;
+  border: 0;
+  background: var(--panel-2);
+  color: var(--ink);
+  font: 700 1rem/1.1 var(--font-ui);
+  cursor: pointer;
+  box-shadow: var(--frame), inset 0 -4px 0 0 var(--panel-shade);
+}
+
+.aimpad__zone:hover {
+  background: var(--accent);
+  color: var(--accent-ink);
+}
+
+.aimpad__zone:active {
+  transform: translateY(2px);
+}
+
+.aimpad__zone.is-cursor {
+  outline: 3px dashed var(--focus);
+  outline-offset: -8px;
+}
+
+.aimpad__zone.is-habit::after {
+  content: 'Seen';
+  position: absolute;
+  left: 5px;
+  top: 4px;
+  padding: 1px 4px;
+  background: var(--bad);
+  color: #ffffff;
+  font: 700 0.7rem/1.2 var(--font-ui);
+}
+
+.aimpad__key {
+  position: absolute;
+  top: 4px;
+  right: 4px;
+  opacity: 0.75;
+  font-size: 0.55rem;
+}
+
+@media (hover: none) and (pointer: coarse) {
+  .aimpad__zone {
+    padding-top: 12px;
+  }
+
+  .aimpad__key {
+    display: none;
+  }
+}

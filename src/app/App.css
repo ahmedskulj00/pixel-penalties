@@ -1,0 +1,114 @@
+.skip-link {
+  position: absolute;
+  left: -9999px;
+  top: 8px;
+  z-index: 50;
+  padding: 10px 14px;
+  background: var(--accent);
+  color: var(--accent-ink);
+  font-weight: 700;
+}
+
+.skip-link:focus {
+  left: 12px;
+}
+
+.topbar {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+  max-width: 1120px;
+  margin: 0 auto;
+  padding: 10px 16px 6px;
+}
+
+.brand {
+  display: inline-flex;
+  align-items: center;
+  gap: 10px;
+  min-height: 44px;
+  padding: 6px 4px;
+  border: 0;
+  background: none;
+  color: var(--ink);
+  font: 400 0.72rem/1 var(--font-display);
+  cursor: pointer;
+}
+
+.topbar__actions {
+  display: flex;
+  gap: 6px;
+}
+
+@media (max-width: 520px) {
+  .brand__name {
+    display: none;
+  }
+
+  .topbar__actions {
+    gap: 2px;
+  }
+}
+
+.main {
+  max-width: 1120px;
+  margin: 0 auto;
+  padding: 6px 16px 48px;
+  outline: none;
+}
+
+.main--match {
+  padding-bottom: 24px;
+}
+
+@media (min-width: 900px), (orientation: landscape) and (max-height: 560px) {
+  .main--match,
+  .app--match .topbar {
+    max-width: 1400px;
+  }
+}
+
+@media (orientation: landscape) and (max-height: 560px) {
+  .topbar {
+    padding-block: 4px 2px;
+  }
+}
+
+@supports (container-type: size) {
+  @media (max-width: 600px) and (orientation: portrait), (orientation: landscape) and (max-height: 560px) {
+    html:has(.app--match) {
+      overscroll-behavior-y: none;
+    }
+
+    .app--match {
+      display: flex;
+      flex-direction: column;
+      height: calc(100dvh - env(safe-area-inset-top, 0px) - env(safe-area-inset-bottom, 0px));
+    }
+
+    .app--match .topbar {
+      width: 100%;
+      padding: 4px 8px 2px;
+    }
+
+    .app--match > .main {
+      flex: 1;
+      width: 100%;
+      min-height: 0;
+      container-type: size;
+    }
+  }
+
+  @media (max-width: 600px) and (orientation: portrait) {
+    .main--match {
+      padding: 0 0 10px;
+    }
+  }
+
+  @media (orientation: landscape) and (max-height: 560px) {
+    .main--match {
+      padding: 4px max(12px, env(safe-area-inset-right, 0px)) 8px max(12px, env(safe-area-inset-left, 0px));
+    }
+  }
+}

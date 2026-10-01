@@ -1,0 +1,23 @@
+.segmented {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 6px;
+}
+
+.segmented__opt {
+  flex: 1 1 auto;
+  min-height: 44px;
+  margin: 3px;
+  padding: 8px 12px;
+  border: 0;
+  background: var(--panel-2);
+  color: var(--ink);
+  font: 700 1rem var(--font-ui);
+  cursor: pointer;
+  box-shadow: var(--frame);
+}
+
+.segmented__opt[aria-checked='true'] {
+  background: var(--accent);
+  color: var(--accent-ink);
+}

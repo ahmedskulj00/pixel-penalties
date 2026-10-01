@@ -1,0 +1,26 @@
+@supports (container-type: size) {
+  @media (orientation: landscape) and (max-height: 560px) {
+    .match .mark {
+      width: 11px;
+      height: 11px;
+    }
+  }
+}
+
+.mark {
+  display: block;
+  width: 14px;
+  height: 14px;
+}
+
+.mark--goal path {
+  fill: #3ccf7e;
+}
+
+.mark--miss path {
+  fill: #ff6b5e;
+}
+
+.mark--todo path {
+  fill: rgba(255, 255, 255, 0.45);
+}

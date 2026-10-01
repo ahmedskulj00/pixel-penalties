@@ -1,0 +1,37 @@
+.start-bar {
+  position: sticky;
+  bottom: 0;
+  z-index: 5;
+  margin-top: 20px;
+  padding: 10px 0 calc(12px + env(safe-area-inset-bottom, 0px));
+}
+
+.start-bar__inner {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  justify-content: space-between;
+  gap: 10px 16px;
+  margin: 3px;
+  padding: 10px 12px;
+  box-shadow: var(--frame), 0 8px 0 0 rgba(0, 0, 0, 0.15);
+}
+
+.start-bar__pick {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  font-weight: 700;
+}
+
+.start-bar__who {
+  display: flex;
+  flex-direction: column;
+  min-width: 0;
+}
+
+.start-bar__spot {
+  color: var(--ink-2);
+  font-size: 0.9rem;
+  font-weight: 400;
+}

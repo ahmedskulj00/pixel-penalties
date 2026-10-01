@@ -1,0 +1,21 @@
+.fixture__team {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  min-width: 0;
+}
+
+.fixture__team--b {
+  flex-direction: row-reverse;
+  text-align: right;
+}
+
+.fixture__name {
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.fixture__team.is-win .fixture__name {
+  font-weight: 700;
+}

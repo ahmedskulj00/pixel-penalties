@@ -1,0 +1,1 @@
+export { ScoreboardSide } from './ScoreboardSide';

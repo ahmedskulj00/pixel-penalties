@@ -1,0 +1,31 @@
+.flag {
+  display: inline-block;
+  flex: none;
+  vertical-align: middle;
+  box-shadow: 0 0 0 1px rgba(0, 0, 0, 0.35);
+}
+
+.flag--xs {
+  width: 18px;
+  height: 12px;
+}
+
+.flag--sm {
+  width: 27px;
+  height: 18px;
+}
+
+.flag--md {
+  width: 36px;
+  height: 24px;
+}
+
+.flag--lg {
+  width: 45px;
+  height: 30px;
+}
+
+.flag--xl {
+  width: 81px;
+  height: 54px;
+}

@@ -1,0 +1,47 @@
+.howto__steps {
+  display: grid;
+  gap: 12px;
+  margin: 0 0 16px;
+  padding: 0;
+  list-style: none;
+}
+
+.howto__step {
+  display: flex;
+  gap: 14px;
+  margin: 3px;
+  padding: 14px;
+}
+
+.howto__step h3 {
+  margin: 0 0 4px;
+  font-size: 1.1rem;
+}
+
+.howto__step p {
+  margin: 0;
+}
+
+.howto__n {
+  align-self: flex-start;
+  padding: 8px 10px 6px;
+  background: var(--accent);
+  color: var(--accent-ink);
+  font: 400 1rem/1 var(--font-display);
+}
+
+.keys {
+  border-collapse: collapse;
+  margin-bottom: 12px;
+}
+
+.keys th {
+  padding: 6px 14px 6px 0;
+  text-align: left;
+  vertical-align: top;
+}
+
+.keys td {
+  padding: 6px 0;
+  line-height: 2;
+}
