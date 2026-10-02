@@ -6,6 +6,9 @@ Guadeloupe and Martinique, and 14 teams that no longer exist, from the Soviet Un
 Vietnam) and 31 competitions with 462 editions, from the 1916 South American Championship to the
 2035 Women's World Cup.
 
+Play tournaments and quick shootouts against the computer, or a friend on the same device: the
+kicker picks a spot and strikes, then passes the device to the keeper.
+
 ## Commands
 
     npm install

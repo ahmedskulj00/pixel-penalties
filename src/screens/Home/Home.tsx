@@ -1,7 +1,7 @@
 import type { NationId } from '@/types';
 import type { Navigate } from '@/app/routes';
 import { Flag } from '@/components/Flag';
-import { BallIcon, HelpIcon } from '@/components/Icon';
+import { BallIcon, HelpIcon, PlayersIcon } from '@/components/Icon';
 import { Scene } from '@/components/Scene';
 import { TrophyIcon } from '@/components/TrophyIcon';
 import { COMPETITIONS, TOTAL_EDITIONS, getCompetition, getEdition, knownTrophies } from '@/data/competitions';
@@ -117,6 +117,12 @@ export function Home({ go, openHowTo }: HomeProps) {
           onClick={() => go({ name: 'setup' })}
         />
         <MenuItem icon={<BallIcon />} title="Quick shootout" detail="Any two nations, straight to the spot" onClick={() => go({ name: 'quick' })} />
+        <MenuItem
+          icon={<PlayersIcon />}
+          title="Two players"
+          detail="One device: strike, then pass it to the keeper"
+          onClick={() => go({ name: 'quick', players: 2 })}
+        />
         <MenuItem
           icon={<TrophyIcon kind="gold" scale={2} />}
           title="Trophy cabinet"

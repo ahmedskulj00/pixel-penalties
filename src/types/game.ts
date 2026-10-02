@@ -1,4 +1,4 @@
-/** The two sides of a match: the player and the computer (or the opponent). */
+/** The two sides of a match: 'user' is the player; 'cpu' is the other side, the computer or, in a two-player game, Player 2. */
 export type Side = 'user' | 'cpu';
 
 export type ZoneKind = 'high' | 'chip' | 'low' | 'middle';

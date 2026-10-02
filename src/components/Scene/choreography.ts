@@ -60,6 +60,8 @@ export interface PlayKickOptions {
   plan: KickPlan;
   /** The side the player controls; the crowd reacts for them. */
   userSide: Side;
+  /** Two players on this device: every goal and every save is someone's to celebrate. */
+  local?: boolean;
   timing: Timing;
   /** Swap sprite poses. */
   onPose: (update: PoseUpdate) => void;
@@ -229,7 +231,7 @@ function ballFlight(plan: KickPlan, keeper: KeeperPlan): Flight {
  * Play one kick. `refs` holds DOM refs (kicker, keeper, ball, shadow, net, crowdL, crowdR, scene).
  * `onPose` swaps sprite poses; `fx` plays sound/haptics.
  */
-export async function playKick({ refs, plan, userSide, timing, onPose, fx, signal }: PlayKickOptions): Promise<void> {
+export async function playKick({ refs, plan, userSide, local = false, timing, onPose, fx, signal }: PlayKickOptions): Promise<void> {
   const k = (ms: number) => Math.max(16, ms * timing.speed * (timing.reduced ? 0.4 : 1));
   const el = (name: keyof SceneRefs): Animated | null => refs[name].current;
   const { result } = plan.outcome;
@@ -301,8 +303,8 @@ export async function playKick({ refs, plan, userSide, timing, onPose, fx, signa
         );
       }
     }
-    fx.sound(takerIsUser ? 'goal' : 'concede');
-    fx.buzz(takerIsUser ? [40, 40, 70] : 30);
+    fx.sound(local || takerIsUser ? 'goal' : 'concede');
+    fx.buzz(local || takerIsUser ? [40, 40, 70] : 30);
     onPose({ kicker: 'cheer' });
   } else {
     if (keeper.land && !(plan.outcome.how === 'parried' || plan.outcome.how === 'tipped' || plan.outcome.how === 'fingertips')) {
@@ -315,9 +317,11 @@ export async function playKick({ refs, plan, userSide, timing, onPose, fx, signa
         iterations: 3,
       });
     }
-    if (result === 'save') fx.sound(takerIsUser ? 'groan' : 'save');
-    else if (plan.outcome.how !== 'post' && plan.outcome.how !== 'bar') fx.sound(takerIsUser ? 'groan' : 'save');
-    fx.buzz(takerIsUser ? 25 : [60, 30, 60]);
+    // Good news for the keeper's side: the player's against the computer, and always someone's with two players.
+    const keeperCheers = local || !takerIsUser;
+    if (result === 'save') fx.sound(keeperCheers ? 'save' : 'groan');
+    else if (plan.outcome.how !== 'post' && plan.outcome.how !== 'bar') fx.sound(keeperCheers ? 'save' : 'groan');
+    fx.buzz(keeperCheers ? [60, 30, 60] : 25);
     onPose({ kicker: 'sad' });
   }
   await wait(k(380), signal);

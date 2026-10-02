@@ -35,6 +35,11 @@ export function HowToModal({ onClose }: { onClose: () => void }) {
           Real penalty takers pick their spot early and commit. Changing your mind at the last second is where misses come from, so the game gives you one
           decision at a time and no clock on the first one.
         </p>
+        <h3 className="settings__title">Two players</h3>
+        <p>
+          Play a friend on one device. The kicker picks a spot and strikes while the keeper looks away, then passes the device over. The keeper picks a dive,
+          and you both watch the kick. Roles swap every kick, so whoever just kept goal shoots next.
+        </p>
         <h3 className="settings__title">Keyboard</h3>
         <table className="keys">
           <tbody>

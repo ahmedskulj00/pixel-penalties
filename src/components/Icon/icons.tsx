@@ -23,4 +23,7 @@ export const DiveIcon = ({ col }: { col: number }) => <Icon d={DIVE_PATHS[col]} 
 
 export const BackIcon = () => <Icon d="M3 1h2v1h-1v1h4v2h-4v1h1v1h-2v-1h-1v-1h-1v-2h1v-1h1z" />;
 
+/** Two people, one a step behind the other: two players on one device. */
+export const PlayersIcon = () => <Icon d="M1 1h2v2h-2zM5 0h2v2h-2zM0 4h4v4h-4zM5 3h3v4h-3z" />;
+
 export const BallIcon = () => <Icon d="M2 0h4v1h1v1h1v4h-1v1h-1v1h-4v-1h-1v-1h-1v-4h1v-1h1zM3 2v2h2v-2z" />;
