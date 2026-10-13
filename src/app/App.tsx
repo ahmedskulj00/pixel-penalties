@@ -17,7 +17,7 @@ import { QuickSetup } from '@/screens/QuickSetup';
 import { TournamentSetup, type TournamentChoice } from '@/screens/TournamentSetup';
 import { addTrophy, tournamentStore, updateSettings, useSettings } from '@/state';
 import { newSeed } from '@/utils/random';
-import type { ModalName, Navigate, Players, QuickPair, Route } from './routes';
+import type { ModalName, Navigate, QuickPair, Route } from './routes';
 import './App.css';
 
 const THIS_YEAR = 2026;
@@ -117,10 +117,9 @@ export function App() {
     if (t) tournamentStore.set(recordUserResult(t, { won: true, score: [0, 0] }));
   };
 
-  const startQuick = ({ userId, cpuId }: QuickPair, players: Players) => {
+  const startQuick = ({ userId, cpuId }: QuickPair) => {
     setMatchKey((k) => k + 1);
-    const local = players === 2;
-    go({ name: 'match', mode: local ? 'local' : 'quick', userId, cpuId, year: THIS_YEAR, stage: local ? 'Two players' : 'Friendly', board: 'PIXEL PENALTIES' });
+    go({ name: 'match', mode: 'quick', userId, cpuId, year: THIS_YEAR, stage: 'Friendly', board: 'PIXEL PENALTIES' });
     if (!settings.seenHowTo) setModal('howto');
   };
 
@@ -136,13 +135,9 @@ export function App() {
     case 'setup':
       screen = <TournamentSetup onStart={startTournament} onHome={() => go({ name: 'home' })} />;
       break;
-    case 'quick': {
-      const players = route.players ?? 1;
-      screen = (
-        <QuickSetup key={players} players={players} initial={route.initial} onStart={(pair) => startQuick(pair, players)} onHome={() => go({ name: 'home' })} />
-      );
+    case 'quick':
+      screen = <QuickSetup initial={route.initial} onStart={startQuick} onHome={() => go({ name: 'home' })} />;
       break;
-    }
     case 'bracket':
       screen = (
         <Bracket
@@ -167,7 +162,7 @@ export function App() {
           onPause={() => setModal('pause')}
           onFinish={finishTournamentMatch}
           onRematch={() => setMatchKey((k) => k + 1)}
-          onExit={() => go({ name: 'quick', players: route.mode === 'local' ? 2 : 1, initial: { userId: route.userId, cpuId: route.cpuId } })}
+          onExit={() => go({ name: 'quick', initial: { userId: route.userId, cpuId: route.cpuId } })}
         />
       );
       break;

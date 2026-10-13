@@ -6,14 +6,11 @@ Guadeloupe and Martinique, and 14 teams that no longer exist, from the Soviet Un
 Vietnam) and 31 competitions with 462 editions, from the 1916 South American Championship to the
 2035 Women's World Cup.
 
-Play tournaments and quick shootouts against the computer, or a friend on the same device: the
-kicker picks a spot and strikes, then passes the device to the keeper.
-
 ## Commands
 
     npm install
     npm run dev          # Vite dev server with hot reload
-    npm run build        # type-check, then → dist/index.html, one self-contained file (JS and CSS inlined)
+    npm run build        # type-check, then → dist/index.html, one self-contained file (JS and CSS inlined), and the favicon
     npm run build:debug  # unminified, with React's development checks → dist-debug/index.html
     npm run preview      # serve the production build locally
     npm test             # Vitest: data integrity, title counts, shootout rules, every edition played to a finish
@@ -46,6 +43,8 @@ React 19 and TypeScript in strict mode, built with Vite. Imports use the `@/` al
     src/audio/                Web Audio synth effects and haptics
     src/state/                localStorage-backed stores read with useSyncExternalStore
     src/hooks/                keyboard shortcuts, reduced motion, animation timing
+    public/favicon.ico        the browser-tab icon, a 16×16 pixel football (the 32 and 48 px sizes are 2× and 3× copies);
+                              Vite copies it next to index.html, linked with a relative path so it works on any sub-path
     tests/                    Vitest suites for the data, the shootout rules and the tournament engine
     scripts/qa.py             Playwright run-through with screenshots (QA_FILE=dist-debug/index.html for the debug build)
     scripts/sheet.ts          renders every flag and sprite pose to dist/sheet.html
